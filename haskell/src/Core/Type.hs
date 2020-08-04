@@ -15,8 +15,8 @@ data Term
   | Ref Loc Text
   | Typ Loc
   | All Loc Rig  Name Name Term (Term -> Term -> Term)
-  | Lam Loc Name (Term -> Term)
-  | App Loc Term Term
+  | Lam Loc Bool Name (Term -> Term)
+  | App Loc Bool Term Term
   | Let Loc Name Term (Term -> Term)
   | Ann Loc Bool Term Term
 

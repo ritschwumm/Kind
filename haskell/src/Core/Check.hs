@@ -3,6 +3,7 @@
  -- {-# LANGUAGE TypeApplications #-}
 module Core.Check where
 
+import Core.Rig
 import Core.Type
 import Core.Hash
 import Core.Eval
@@ -25,6 +26,18 @@ import Data.STRef
 
 import Debug.Trace
 
+-- Counts the number of non-erased uses of a variable
+uses :: Integer -> Term -> Rig
+uses idx trm = case trm of
+  Var l n idx'     -> if idx == idx' then One else Zero
+  Ref l n          -> Zero
+  Typ l            -> Zero
+  All _ r s n h b  -> uses idx h +# uses idx (b difVar difVar)
+  Lam _ e n b      -> uses idx (b difVar)
+  App _ e f a      -> uses idx f +# (if e then Zero else uses idx a)
+  Let _ n x b      -> uses idx x +# uses idx (b difVar)
+  Ann _ _ x t      -> uses idx x
+  where difVar = Var noLoc "" (idx+1)
 
 -- TODO: share set of equals hashes between `equal` calls?
 equal :: Term -> Term -> Module -> Integer -> Bool
@@ -38,12 +51,10 @@ equal a b defs dep = runST $ top a b dep
     go :: Term -> Term -> Integer -> STRef s (Set (Hash,Hash)) -> ST s Bool
     go a b dep seen = do
       let var d = Var noLoc "" d
-      let a1 = reduce a defs
-      let b1 = reduce b defs
+      let a1 = reduce a defs False
+      let b1 = reduce b defs False
       let ah = hash a1
       let bh = hash b1
-      -- traceM $ show a
-      -- traceM $ show b
       s' <- readSTRef seen
       if | (ah == bh)              -> return True
          | (ah,bh) `Set.member` s' -> return True
@@ -59,15 +70,17 @@ equal a b defs dep = runST $ top a b dep
                  bind_eq <- go ah bh dep seen
                  body_eq <- go a1_body b1_body (dep+2) seen
                  return $ rig_eq && self_eq && bind_eq && body_eq
-               (Lam _ _ ab, Lam _ _ bb) -> do
+               (Lam _ ae _ ab, Lam _ be _ bb) -> do
                  let a1_body = ab (var dep)
                  let b1_body = bb (var dep)
+                 let eras_eq = ae == be
                  body_eq <- go a1_body b1_body (dep+1) seen
-                 return body_eq
-               (App _ af aa, App _ bf ba) -> do
+                 return $ eras_eq && body_eq
+               (App _ ae af aa, App _ be bf ba) -> do
+                 let eras_eq = ae == be
                  func_eq <- go af bf dep seen
                  argm_eq <- go aa ba dep seen
-                 return $ func_eq && argm_eq
+                 return $ eras_eq && func_eq && argm_eq
                (Let _ _ ax ab, Let _ _ bx bb) -> do
                  let a1_body = ab (var dep)
                  let b1_body = bb (var dep)

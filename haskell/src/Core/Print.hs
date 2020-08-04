@@ -23,10 +23,10 @@ term t = let go = term in case t of
           Zero -> T.concat [self, "∀(", n, ":", go h, "). ", body]
           One  -> T.concat [self, "(", n, ":", go h, ") ⊸ ", body]
           Many -> T.concat [self, "(", n, ":", go h, ") → ", body]
-  Lam _ n b          ->
+  Lam _ e n b          ->
     let body = go (b (Var noLoc (T.snoc n '#') 0))
-    in T.concat ["λ", n, ". ", body]
-  App _ f a      -> T.concat ["(", go f, " ", go a, ")"]
+    in T.concat [if e then "Λ" else "λ", n, ". ", body]
+  App _ e f a      -> T.concat ["(", go f, if e then " -" else " ", go a, ")"]
   Let _ n x b        -> let body = go (b (Var noLoc (T.snoc n '#') 0)) in
     T.concat ["let ", n, "=", go x, ";", body]
   Ann _ d x t          -> T.concat [":", go t, " ", go x]

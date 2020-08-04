@@ -51,20 +51,20 @@ term = do
           rig self name (bind ctx) (\s x -> body ((name,x):(self,s):ctx))
     , label "\n - a lambda: \"λx b\"" $ do
         from <- getOffset
-        string "λ"
+        eras <- (=="Λ") <$> (string "Λ" <|> string "λ")
         name <- name True <* spaceC
         body <- term
         upto <- getOffset
         return $ \ctx ->
-          Lam (Loc from upto) name (\x -> body ((name,x):ctx))
-    , label "\n - an application: \"(f a)\"" $ do
-        symbol "("
+          Lam (Loc from upto) eras name (\x -> body ((name,x):ctx))
+    , label "\n - an application: \"<f a>\", \"(f a)\"" $ do
+        eras <- (=="<") <$> (symbol "<" <|> symbol "(")
         func <- term
         argm <- term
-        symbol ")"
+        symbol (if eras then ">" else ")")
         upto <- getOffset
         return $ \ctx ->
-          App (Loc from upto) (func ctx) (argm ctx)
+          App (Loc from upto) eras (func ctx) (argm ctx)
     , label "\n - a definition: \"$x = y; b\", \"@x = y; b\"" $ do
         string "$"
         name <- name True <* spaceC <* symbol "="

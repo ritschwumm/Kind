@@ -77,10 +77,10 @@ compText term dep =
         body = go (b s x) (dep + 2)
         q    = case r of {Zero -> "0"; One -> "1"; Many -> "ω";}
      in T.concat [q,"Π",bind,body]
-  Lam _ n b          ->
+  Lam _ _ n b          ->
     let body = go (b (var "" (0-dep-1))) (dep+1)
     in T.concat ["λ", body]
-  App _ f a      -> T.concat ["@", go f dep, go a dep]
+  App _ _ f a        -> T.concat ["@", go f dep, go a dep]
   Let _ _ x b        ->
     let expr = go x dep
         body = go (b (var "" (0-dep-1))) (dep+1)
