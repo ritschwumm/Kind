@@ -42,7 +42,7 @@ reduce term (Module defs) erase = go term
                 go (b a)
               x          ->
                 term
-        Let _ n x b      -> go (b x)
+        Let _ _ n x b    -> go (b x)
         Ann _ _ x t      -> go x
 
 -- Normalize
@@ -77,5 +77,5 @@ normalize term defs erased = runST (top term)
               argm <- go a seen
               return $ App noLoc e func argm
              -- Should not happen
-             Let _ n x b      -> go (b x) seen
+             Let _ _ n x b    -> go (b x) seen
              Ann _ _ x t      -> go x seen

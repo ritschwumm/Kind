@@ -16,7 +16,7 @@ term t = let go = term in case t of
   Var _ n _            -> n
   Ref _ n              -> n
   Typ _                -> "*"
-  All _ r s n h b ->
+  All _ r s n h b      ->
     let body = go (b (Var noLoc (T.snoc s '#') 0) (Var noLoc (T.snoc n '#') 0))
         self = if s == "" then "" else T.concat ["$(", s, "). "]
      in case r of
@@ -26,9 +26,9 @@ term t = let go = term in case t of
   Lam _ e n b          ->
     let body = go (b (Var noLoc (T.snoc n '#') 0))
     in T.concat [if e then "Λ" else "λ", n, ". ", body]
-  App _ e f a      -> T.concat ["(", go f, if e then " -" else " ", go a, ")"]
-  Let _ n x b        -> let body = go (b (Var noLoc (T.snoc n '#') 0)) in
-    T.concat ["let ", n, "=", go x, ";", body]
+  App _ e f a          -> T.concat ["(", go f, if e then " -" else " ", go a, ")"]
+  Let _ m n x b        -> let body = go (b (Var noLoc (T.snoc n '#') 0)) in
+    T.concat ["let ", if m == One then "mut " else "", n, "=", go x, ";", body]
   Ann _ d x t          -> T.concat [":", go t, " ", go x]
 
 instance Show Term where

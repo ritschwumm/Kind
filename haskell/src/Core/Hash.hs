@@ -58,7 +58,7 @@ blake term = Blake.hash $ [T.encodeUtf8 $ compText term 0]
 hash :: Term -> Hash
 hash term = Hash $ BA.convert $ blake term
 
-compText :: Term -> Integer -> Text
+compText :: Term -> Int -> Text
 compText term dep =
   let go = compText
       var = Var noLoc
@@ -81,7 +81,7 @@ compText term dep =
     let body = go (b (var "" (0-dep-1))) (dep+1)
     in T.concat ["λ", body]
   App _ _ f a        -> T.concat ["@", go f dep, go a dep]
-  Let _ _ x b        ->
+  Let _ _ _ x b      ->
     let expr = go x dep
         body = go (b (var "" (0-dep-1))) (dep+1)
      in T.concat ["$",expr,body]

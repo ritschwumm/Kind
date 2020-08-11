@@ -16,6 +16,14 @@ import           Core.Rig
 import           Core.Type
 import qualified Core.Print as Core.Print
 
+type Ctx = [(Name,Term)]
+
+find :: Ctx -> ((Name,Term) -> Bool) -> Maybe ((Name,Term),Int)
+find ctx f = go ctx 0
+  where
+    go [] _     = Nothing
+    go (x:xs) i = if f x then Just (x,i) else go xs (i+1)
+
 type Parser = ParsecT Void Text Identity
 
 name :: Bool -> Parser Name
@@ -72,7 +80,7 @@ term = do
         body <- term
         upto <- getOffset
         return $ \ctx ->
-          Let (Loc from upto) name (expr ctx) (\x -> body ((name,x):ctx))
+          Let (Loc from upto) Many name (expr ctx) (\x -> body ((name,x):ctx))
     , label "\n - a type annotation: \":A x\"" $ do
         symbol ":"
         typ_ <- term

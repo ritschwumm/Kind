@@ -21,9 +21,17 @@ One  ≤# x    = True
 Many ≤# Many = True
 Many ≤# x    = False
 
--- Division of multiplicities: x/y is defined as the largest d such that d*x is not larger than y
+-- Division of multiplicities: x/y is defined as the largest d such that d*y is not larger than x
 (/#) :: Rig -> Rig -> Rig
 x   /# Zero = Many
 x   /# One  = x
 One /# Many = Zero
 x   /# Many = x
+
+-- Subtraction of multiplicities: x-y is defined, if it exists, as the largest d such that d+y is not larger than x
+(-#) :: Rig -> Rig -> Maybe(Rig)
+x    -# Zero = Just x
+Zero -# x    = Nothing
+One  -# One  = Just Zero
+One  -# Many = Nothing
+Many -# x    = Just Many

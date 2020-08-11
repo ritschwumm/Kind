@@ -9,7 +9,9 @@ import Core.Hash
 import Core.Eval
 import Core.Print
 
-import Data.List (find)
+import Data.Sequence (Seq, (|>), viewr, ViewR((:>), EmptyR))
+import qualified Data.Sequence as Seq
+
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -26,29 +28,16 @@ import Data.STRef
 
 import Debug.Trace
 
--- Counts the number of non-erased uses of a variable
-uses :: Integer -> Term -> Rig
-uses idx trm = case trm of
-  Var l n idx'     -> if idx == idx' then One else Zero
-  Ref l n          -> Zero
-  Typ l            -> Zero
-  All _ r s n h b  -> uses idx h +# uses idx (b difVar difVar)
-  Lam _ e n b      -> uses idx (b difVar)
-  App _ e f a      -> uses idx f +# (if e then Zero else uses idx a)
-  Let _ n x b      -> uses idx x +# uses idx (b difVar)
-  Ann _ _ x t      -> uses idx x
-  where difVar = Var noLoc "" (idx+1)
-
 -- TODO: share set of equals hashes between `equal` calls?
-equal :: Term -> Term -> Module -> Integer -> Bool
+equal :: Term -> Term -> Module -> Int -> Bool
 equal a b defs dep = runST $ top a b dep
   where
-    top :: Term -> Term -> Integer -> ST s Bool
+    top :: Term -> Term -> Int -> ST s Bool
     top a b dep = do
       seen <- newSTRef (Set.empty)
       go a b dep seen
 
-    go :: Term -> Term -> Integer -> STRef s (Set (Hash,Hash)) -> ST s Bool
+    go :: Term -> Term -> Int -> STRef s (Set (Hash,Hash)) -> ST s Bool
     go a b dep seen = do
       let var d = Var noLoc "" d
       let a1 = reduce a defs False
@@ -81,95 +70,112 @@ equal a b defs dep = runST $ top a b dep
                  func_eq <- go af bf dep seen
                  argm_eq <- go aa ba dep seen
                  return $ eras_eq && func_eq && argm_eq
-               (Let _ _ ax ab, Let _ _ bx bb) -> do
-                 let a1_body = ab (var dep)
-                 let b1_body = bb (var dep)
-                 expr_eq <- go ax bx dep seen
-                 body_eq <- go a1_body b1_body (dep+1) seen
-                 return $ expr_eq && body_eq
-               (Ann _ _ ax _, Ann _ _ bx _) -> go ax bx dep seen
                _ -> return False
 
 data CheckErr = CheckErr Loc Ctx Text deriving Show
+type Ctx      = Seq (Rig, Term)
+type PreCtx   = Seq (Rig, Term) -- should stand for contexts with only the Zero quantity
+type TermType = Term
 
--- check :: Term -> Term -> Module -> Ctx -> STRef s (Set (Hash,Hash)) -> ExceptT CheckErr (ST s) ()
--- check trm typ defs ctx seen = do
---   let var n l = Var noLoc n l
---   let typv = reduce typ defs
---   let trmh = hash trm
---   let typh = hash typv
---   s <- lift $ readSTRef seen
---   if (trmh, typh) `Set.member` s
---     then return ()
---     else do
---     lift $ modifySTRef' seen (Set.insert (trmh,typh))
---     case trm of
---       Lam trm_loc trm_eras trm_name trm_body -> case typv of
---         All _ typ_eras typ_self typ_name typ_bind typ_body -> do
---           when (typ_eras /= trm_eras) $ throwError (CheckErr trm_loc ctx "Type mismatch")
---           let self_var = Ann noLoc True trm typ
---           let name_var = Ann noLoc True (var trm_name (toInteger $ length ctx)) typ_bind
---           let body_typ = typ_body self_var name_var
---           let body_ctx = (trm_name,typ_bind):ctx
---           check (trm_body name_var) body_typ defs body_ctx seen
---         _  -> do
---           throwError (CheckErr trm_loc ctx "Lamda has non-function type")
---       Let trm_loc trm_name trm_expr trm_body -> do
---         expr_typ <- infer trm_expr defs ctx seen
---         let expr_var = Ann noLoc True (var trm_name (toInteger $ length ctx)) expr_typ
---         let body_ctx = (trm_name,expr_typ):ctx
---         check trm_expr typ defs body_ctx seen
---       _ -> do
---         infr <- infer trm defs ctx seen
---         when (not (equal typ infr defs (toInteger $ length ctx))) $
---           throwError (CheckErr noLoc ctx $ T.concat
---                        ["Found type... \x1b[2m", term infr, "\x1b[0m\n",
---                        "Instead of... \x1b[2m", term typ, "\x1b[0m"])
---         return ()
+multiplyCtx :: Rig -> Ctx -> Ctx
+multiplyCtx rig ctx = fmap mul ctx
+  where mul (rig', typ') = (rig *# rig', typ')
 
--- infer :: Term -> Module -> Ctx -> STRef s (Set (Hash,Hash)) -> ExceptT CheckErr (ST s) Term
--- infer trm defs ctx seen = do
---   let var n l = Var noLoc n l
---   case trm of
---     Var l n idx -> throwError (CheckErr l ctx "Non-annotated variable (should not happen)")
---     Ref l n -> case (_defs defs) Map.!? n of
---       Just (Expr _ t _) -> return t
---       Nothing           -> throwError (CheckErr l ctx (T.concat ["Undefined reference ", n]))
---     Typ l   -> return $ Typ l
---     App trm_loc trm_eras trm_func trm_argm -> do
---       func_typ <- (\x -> reduce x defs) <$> infer trm_func defs ctx seen
---       case func_typ of
---         All ftyp_loc ftyp_eras ftyp_self_ ftyp_name ftyp_bind ftyp_body -> do
---           let self_var = Ann noLoc True trm_func func_typ
---           let name_var = Ann noLoc True trm_argm ftyp_bind
---           check trm_argm ftyp_bind defs ctx seen
---           let trm_typ = ftyp_body self_var name_var
---           when (trm_eras /= ftyp_eras) $ throwError $ CheckErr trm_loc ctx "Mismatched erasure"
---           return trm_typ
---         _ -> throwError $ CheckErr trm_loc ctx "Non-function application"
---     Let trm_loc trm_name trm_expr trm_body -> do
---       expr_typ <- infer trm_expr defs ctx seen
---       let expr_var = Ann noLoc True (var trm_name (toInteger $ length ctx)) expr_typ
---       let body_ctx = (trm_name,expr_typ):ctx
---       infer (trm_body expr_var) defs body_ctx seen
---     All trm_loc trm_eras trm_self trm_name trm_bind trm_body -> do
---       let self_var = Ann noLoc True (var trm_self $ toInteger $ length ctx) trm
---       let name_var = Ann noLoc True (var trm_name $ toInteger $ length ctx + 1) trm_bind
---       let body_ctx = (trm_name,trm_bind):(trm_self,trm):ctx
---       check trm_bind (Typ noLoc) defs ctx seen
---       check (trm_body self_var name_var) (Typ noLoc) defs body_ctx seen
---       return $ Typ noLoc
---     Ann trm_loc trm_done trm_expr trm_type -> do
---       if trm_done
---       then return trm_type
---       else do
---         check trm_expr trm_type defs ctx seen
---         return trm_type
---     _ -> throwError $ CheckErr noLoc ctx "Can't infer type"
+-- Assumes both context are compatible (different only by quantities)
+addCtx :: Ctx -> Ctx -> Ctx
+addCtx ctx ctx' = Seq.zipWith add ctx ctx'
+  where add (rig, typ) (rig', _) = (rig +# rig', typ)
 
--- checkExpr :: Expr -> Module -> Except CheckErr ()
--- checkExpr (Expr n typ trm) mod = do
---   check trm typ mod []
+check :: PreCtx -> Rig -> Term -> TermType -> Module -> Except CheckErr Ctx
+check prectx rig trm typ defs = do
+  let var n l = Var noLoc n l
+  let typv = reduce typ defs False
+  case trm of
+    Lam trm_loc _ trm_name trm_body -> case typv of
+      All _ typ_rig typ_self typ_name typ_bind typ_body -> do
+        let name_var = var trm_name (length prectx)
+        let prectx'  = prectx |> (Zero, typ_bind)
+        ctx' <- check prectx' One (trm_body name_var) (typ_body trm name_var) defs
+        case viewr ctx' of
+          EmptyR               -> throwError (CheckErr trm_loc prectx "Impossible")
+          ctx :> (typ_rig', _) -> do
+            unless (typ_rig' ≤# typ_rig) -- `typ_rig' == typ_rig` instead for linear QTT
+              (throwError (CheckErr trm_loc prectx "Lambda quantity mismatch"))
+            return $ multiplyCtx rig ctx
+      _  -> do
+        throwError (CheckErr trm_loc prectx "Lambda has non-function type")
+    Let trm_loc let_rig trm_name trm_expr trm_body -> do
+      (ctx, expr_typ) <- infer prectx let_rig trm_expr defs
+      let expr_var = var trm_name (length prectx)
+      let prectx' = prectx |> (Zero, expr_typ)
+      ctx' <- check prectx' One (trm_body expr_var) typ defs
+      case viewr ctx' of
+        EmptyR                -> throwError (CheckErr trm_loc prectx "Impossible")
+        ctx' :> (typ_rig', _) -> do
+          unless (typ_rig' ≤# let_rig) -- `typ_rig' == let_rig` instead for linear QTT
+            (throwError (CheckErr trm_loc prectx "Let quantity mismatch"))
+          return $ multiplyCtx rig (addCtx ctx ctx')
+    _ -> do
+      (ctx, infr) <- infer prectx rig trm defs
+      if equal typ infr defs (length prectx)
+        then return ctx
+        else do
+        let errMsg = T.concat ["Found type... \x1b[2m", term $ normalize infr defs False, "\x1b[0m\n",
+                               "Instead of... \x1b[2m", term $ normalize typ defs False,  "\x1b[0m"]
+        throwError (CheckErr noLoc prectx errMsg)
 
--- checkModule :: Module -> [Except CheckErr ()]
--- checkModule mod = fmap (\(n,x) -> checkExpr x mod) (Map.toList $ _defs mod)
+infer :: PreCtx -> Rig -> Term -> Module -> Except CheckErr (Ctx, TermType)
+infer prectx rig trm defs = do
+  let var n l = Var noLoc n l
+  case trm of
+    Var l n idx -> do
+      let (_, typ) = Seq.index prectx idx
+      let ctx = Seq.update idx (rig, typ) prectx
+      return (ctx, typ)
+    Ref l n -> case (_defs defs) Map.!? n of
+      Just (Expr _ t _) -> return (prectx, t)
+      Nothing           -> throwError (CheckErr l prectx (T.concat ["Undefined reference ", n]))
+    Ann trm_loc _ trm_expr trm_type -> do
+      -- The case done = True does not currently work
+      ctx <- check prectx rig trm_expr trm_type defs
+      return (ctx, trm_type)
+    Typ l   -> return (prectx, Typ l)
+    All trm_loc trm_rig trm_self trm_name trm_bind trm_body -> do
+      let self_var = var trm_self $ length prectx
+      let name_var = var trm_name $ length prectx + 1
+      let prectx'  = prectx |> (Zero, trm) |> (Zero, trm_bind)
+      check prectx Zero trm_bind (Typ noLoc) defs
+      check prectx' Zero (trm_body self_var name_var) (Typ noLoc) defs
+      return (prectx, Typ noLoc)
+    App trm_loc _ trm_func trm_argm -> do
+      (ctx, func_typ') <- infer prectx rig trm_func defs
+      let func_typ = reduce func_typ' defs False
+      case func_typ of
+        All _ ftyp_rig ftyp_self_ ftyp_name ftyp_bind ftyp_body -> do
+          ctx' <- check prectx (rig *# ftyp_rig) trm_argm ftyp_bind defs
+          let trm_typ = ftyp_body trm_func trm_argm
+          return (addCtx ctx ctx', trm_typ)
+        _ -> throwError $ CheckErr trm_loc ctx "Non-function application"
+    Let trm_loc let_rig trm_name trm_expr trm_body -> do
+      (ctx, expr_typ) <- infer prectx let_rig trm_expr defs
+      let expr_var = var trm_name (length prectx)
+      let prectx' = prectx |> (Zero, expr_typ)
+      (ctx', trm_typ) <- infer prectx' One (trm_body expr_var) defs
+      case viewr ctx' of
+        EmptyR                -> throwError (CheckErr trm_loc prectx "Impossible")
+        ctx' :> (typ_rig', _) -> do
+          unless (typ_rig' ≤# let_rig) -- `typ_rig' == let_rig` instead for linear QTT
+            (throwError (CheckErr trm_loc prectx "Let quantity mismatch"))
+          return (multiplyCtx rig (addCtx ctx ctx'), trm_typ)
+    _ -> throwError $ CheckErr noLoc prectx "Cannot infer type"
+
+checkExpr :: Expr -> Module -> Except CheckErr ()
+checkExpr (Expr n typ trm) mod = do
+  --traceM $ "checking: " ++ T.unpack n
+  --traceM $ "type: " ++ show typ
+  --traceM $ "term: " ++ show trm
+  check Seq.empty One trm typ mod
+  return ()
+
+checkModule :: Module -> [Except CheckErr ()]
+checkModule mod = fmap (\(n,x) -> checkExpr x mod) (Map.toList $ _defs mod)
