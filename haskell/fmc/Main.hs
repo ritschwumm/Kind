@@ -11,4 +11,5 @@ main = do
              >>= getDirectoryContents
              >>= filterM doesFileExist
              >>= filterM (pure . isExtensionOf ".fmc")
-  forM_ files checkFile
+  let linear = False
+  forM_ files $ checkFile linear

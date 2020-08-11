@@ -47,24 +47,29 @@ term = do
   t    <- choice $
     [ label "\n - the type of types: \"*\"" $
         symbol "*" >> (return $ \ctx -> Typ (Loc from (from+1)))
-    , label "\n - a forall: \"Πself(n x: A) B\"" $ do
-        string "Π"
-        self <- name True <* symbol "("
-        rig  <- (symbol "0" *> return Zero) <|> (symbol "1" *> return One) <|> (symbol "ω" *> return Many)
-        name <- name True <* spaceC <* symbol ":"
-        bind <- term <* symbol ")"
-        body <- term
-        upto <- getOffset
+    , label "\n - a forall: \"Πself(π x: A) B\"" $ do
+        which <- string "∀" <|> string "Π"
+        self  <- name True <* symbol "("
+        rig   <-
+          if which == "∀"
+          then return Zero
+          else do
+            which <- symbol "1" <|> return ""
+            return $ if which == "1" then One else Many
+        name  <- name True <* spaceC <* symbol ":"
+        bind  <- term <* symbol ")"
+        body  <- term
+        upto  <- getOffset
         return $ \ctx -> All (Loc from upto)
           rig self name (bind ctx) (\s x -> body ((name,x):(self,s):ctx))
-    , label "\n - a lambda: \"λx b\"" $ do
+    , label "\n - a lambda: \"Λx b\", \"λx b\"" $ do
         from <- getOffset
-        eras <- (=="Λ") <$> (string "Λ" <|> string "λ")
+        string "Λ" <|> string "λ"
         name <- name True <* spaceC
         body <- term
         upto <- getOffset
         return $ \ctx ->
-          Lam (Loc from upto) eras name (\x -> body ((name,x):ctx))
+          Lam (Loc from upto) Zero name (\x -> body ((name,x):ctx))
     , label "\n - an application: \"<f a>\", \"(f a)\"" $ do
         eras <- (=="<") <$> (symbol "<" <|> symbol "(")
         func <- term
@@ -72,8 +77,8 @@ term = do
         symbol (if eras then ">" else ")")
         upto <- getOffset
         return $ \ctx ->
-          App (Loc from upto) eras (func ctx) (argm ctx)
-    , label "\n - a definition: \"$x = y; b\", \"@x = y; b\"" $ do
+          App (Loc from upto) Zero (func ctx) (argm ctx)
+    , label "\n - a definition: \"$x = y; b\"" $ do
         string "$"
         name <- name True <* spaceC <* symbol "="
         expr <- term <* symbol ";"
@@ -87,7 +92,7 @@ term = do
         expr <- term
         upto <- getOffset
         return $ \ctx ->
-          Ann (Loc from upto) False (expr ctx) (typ_ ctx)
+          Ann (Loc from upto) (expr ctx) (typ_ ctx)
     , label "\n - a reference, either global or local: \"x\"" $ do
         name <- name False
         upto <- getOffset

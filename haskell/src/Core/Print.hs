@@ -23,13 +23,13 @@ term t = let go = term in case t of
           Zero -> T.concat [self, "∀(", n, ":", go h, "). ", body]
           One  -> T.concat [self, "(", n, ":", go h, ") ⊸ ", body]
           Many -> T.concat [self, "(", n, ":", go h, ") → ", body]
-  Lam _ e n b          ->
+  Lam _ q n b          ->
     let body = go (b (Var noLoc (T.snoc n '#') 0))
-    in T.concat [if e then "Λ" else "λ", n, ". ", body]
-  App _ e f a          -> T.concat ["(", go f, if e then " -" else " ", go a, ")"]
+    in T.concat [if q == Zero then "Λ" else "λ", n, ". ", body]
+  App _ e f a          -> T.concat ["(", go f, if e == Zero then " -" else " ", go a, ")"]
   Let _ m n x b        -> let body = go (b (Var noLoc (T.snoc n '#') 0)) in
     T.concat ["let ", if m == One then "mut " else "", n, "=", go x, ";", body]
-  Ann _ d x t          -> T.concat [":", go t, " ", go x]
+  Ann _ x t            -> T.concat [":", go t, " ", go x]
 
 instance Show Term where
   show x = T.unpack (Core.Print.term x)

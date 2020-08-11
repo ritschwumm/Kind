@@ -5,6 +5,7 @@ import           Text.Megaparsec
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TIO
+import qualified Data.Map as Map
 import Control.Monad.Except
 
 import           Core.Rig
@@ -27,10 +28,11 @@ parseFile file = do
     Left  e -> putStr (errorBundlePretty e) >> exitFailure
     Right m -> return m
 
-checkFile :: FilePath -> IO ()
-checkFile f = do
-  putStrLn f
+checkFile :: Bool -> FilePath -> IO ()
+checkFile linear f = do
   defs <- parseFile f
-  case runExcept $ checkModule False defs of
-    Left (CheckErr _ _ e) -> throwError $ userError $ T.unpack e
-    Right _               -> return ()
+  let func :: (Text, Expr) -> IO ()
+      func (name, expr) = case runExcept $ checkExpr linear expr defs of
+        Left (CheckErr _ _ e) -> throwError $ userError $ T.unpack e
+        Right _               -> putStrLn $ T.unpack $ T.concat [name, ": ", Print.term (_type expr)]
+  forM_ (Map.toList $ _defs defs) func

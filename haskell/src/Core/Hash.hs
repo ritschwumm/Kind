@@ -85,4 +85,4 @@ compText term dep =
     let expr = go x dep
         body = go (b (var "" (0-dep-1))) (dep+1)
      in T.concat ["$",expr,body]
-  Ann _ _ x _          -> go x dep
+  Ann _ x _          -> go x dep

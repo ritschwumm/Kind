@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Core.Eval where
 
+import Core.Rig
 import Core.Type
 import Core.Hash
 
@@ -33,17 +34,17 @@ reduce term (Module defs) erase = go term
             Nothing                       -> Ref l n
         Typ _            -> Typ noLoc
         All _ _ _ _ _ _  -> term
-        Lam _ e n b      ->
-          if e && erase then go (Lam noLoc False "" (\x -> x)) else term
-        App _ e f a      ->
-          if e && erase then go f else
+        Lam _ q n b      ->
+          if q == Zero && erase then go (b (Lam noLoc One "" (\x -> x))) else term
+        App _ q f a      ->
+          if q == Zero && erase then go f else
             case go f of
               Lam _ e n b  ->
                 go (b a)
               x          ->
                 term
         Let _ _ n x b    -> go (b x)
-        Ann _ _ x t      -> go x
+        Ann _ x t        -> go x
 
 -- Normalize
 normalize :: Term -> Module -> Bool -> Term
@@ -70,12 +71,12 @@ normalize term defs erased = runST (top term)
              All _ r s n h b  -> do
                bind <- go h seen
                return $ All noLoc r s n bind (\s x -> unsafePerformST $ go (b s x) seen)
-             Lam _ e n b      -> traceShow norm $ do
-               return $ Lam noLoc e n (\x -> unsafePerformST $ go (b x) seen)
-             App _ e f a      -> do
+             Lam _ q n b      -> traceShow norm $ do
+               return $ Lam noLoc q n (\x -> unsafePerformST $ go (b x) seen)
+             App _ q f a      -> do
               func <- go f seen
               argm <- go a seen
-              return $ App noLoc e func argm
+              return $ App noLoc q func argm
              -- Should not happen
              Let _ _ n x b    -> go (b x) seen
-             Ann _ _ x t      -> go x seen
+             Ann _ x t        -> go x seen
