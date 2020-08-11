@@ -50,7 +50,7 @@ term = do
     , label "\n - a forall: \"Πself(n x: A) B\"" $ do
         string "Π"
         self <- name True <* symbol "("
-        rig  <- (string "0" *> return Zero) <|> (string "1" *> return One) <|> (string "ω" *> return Many)
+        rig  <- (symbol "0" *> return Zero) <|> (symbol "1" *> return One) <|> (symbol "ω" *> return Many)
         name <- name True <* spaceC <* symbol ":"
         bind <- term <* symbol ")"
         body <- term

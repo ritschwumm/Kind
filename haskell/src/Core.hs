@@ -27,3 +27,10 @@ parseFile file = do
     Left  e -> putStr (errorBundlePretty e) >> exitFailure
     Right m -> return m
 
+checkFile :: FilePath -> IO ()
+checkFile f = do
+  putStrLn f
+  defs <- parseFile f
+  case runExcept $ checkModule False defs of
+    Left (CheckErr _ _ e) -> throwError $ userError $ T.unpack e
+    Right _               -> return ()

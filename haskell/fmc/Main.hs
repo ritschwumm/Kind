@@ -11,5 +11,4 @@ main = do
              >>= getDirectoryContents
              >>= filterM doesFileExist
              >>= filterM (pure . isExtensionOf ".fmc")
-  traverse (\f -> putStrLn f >> parseFile f) files
-  return ()
+  forM_ files checkFile
