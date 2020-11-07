@@ -3288,103 +3288,11 @@ Fm.Comp.js.defs(defs: Fm.Defs): String
 // Tests
 // =====
 
-Fm.base_source: String
-("
-  type Bool {
-    true,
-    false,
-  }
+Fm.source: String
+  "{{FMFM}}"
 
-  Bool.elim(b: Bool, P: (x:Bool) Type, t: P(Bool.true), f: P(Bool.false)): P(b)
-    case b {
-      true: t,
-      false: f,
-    } : P(b.self)
-
-  type Nat {
-    zero,
-    succ(pred: Nat),
-  }
-
-  type Vector (A: Type) ~ (size: Nat) {
-    nil ~ (size: Nat.zero),
-    ext(size: Nat, head: A, tail: Vector(A, size)) ~ (size: Nat.succ(size)),
-  }
-
-  type Equal (A: Type, a: A) ~ (b: A) {
-    refl ~ (b: a),
-  }
-
-  id(A: Type, x: A): A
-    x
-
-  const(A: Type, B: Type, x: A, y: B): A
-    x
-
-  Nat.double(n: Nat): Nat
-    case n {
-      zero: Nat.zero,
-      succ: Nat.succ(Nat.succ(Nat.double(n.pred))),
-    }
-
-  Nat.induce(n: Nat, P: (x:Nat) Type, z: P(Nat.zero), s: (n: Nat) (i: P(n)) P(Nat.succ(n))): P(n)
-    case n {
-      zero: z,
-      succ: s(n.pred, Nat.induce(n.pred, P, z, s)),
-    } : P(n.self)
-
-  Equal.apply(A: Type, B: Type, a: A, b: A, f: (x:A) B, e: Equal(A, a, b)): Equal(B, f(a), f(b))
-    case e {
-      refl: Equal.refl(B, f(a)),
-    } : Equal(B, f(a), f(e.b))
-
-  Nat.same(n: Nat): Nat
-    case n {
-      zero: Nat.zero,
-      succ: Nat.succ(Nat.same(n.pred)),
-    }
-
-  Nat.add(a: Nat, b: Nat): Nat
-    case a with b : Nat = b {
-      zero: b,
-      succ: Nat.succ(Nat.add(a.pred, b)),
-    } : Nat
-
-  test0: Nat
-    let n0 = Nat.zero;
-    let n1 = Nat.succ(n0);
-    let n2 = Nat.succ(n1);
-    Nat.same(n2)
-
-  test1(A: Type, B: Type, x: A, y: B): A
-    const(_, _, x, y)
-
-  Nat.add_zero(a: Nat): Equal(Nat, Nat.add(Nat.zero, a), Nat.add(a, Nat.zero))
-    case a {
-      zero:
-        Equal.refl(Nat, Nat.zero),
-      succ: 
-        let p0 = Nat.add_zero(a.pred);
-        let p1 = Equal.apply(_, _, _, _, Nat.succ, p0);
-        p1,
-    } : Equal(Nat, Nat.add(Nat.zero, a.self), Nat.add(a.self, Nat.zero))
-
-  Nat.add_succ(a: Nat, b: Nat): Equal(Nat, Nat.add(a, Nat.succ(b)), Nat.succ(Nat.add(a, b)))
-    case a {
-      zero:
-        Equal.refl(Nat, Nat.succ(b)),
-      succ: 
-        let p0 = Nat.add_succ(a.pred, b);
-        let p1 = Equal.apply(_, _, _, _, Nat.succ, p0);
-        p1,
-    } : Equal(Nat, Nat.add(a.self, Nat.succ(b)), Nat.succ(Nat.add(a.self, b)))
-
-  main: Nat
-    Nat.double(3)
-")
-
-main: _
-  let defs = Maybe.default<>(Map.new<>, Fm.Defs.read(Fm.base_source));
+main: IO(Unit)
+  let defs = Maybe.default<>(Map.new<>, Fm.Defs.read(Fm.source));
   let defs = Fm.synth(defs)
   do IO {
     let report = Fm.report(defs);
@@ -3395,7 +3303,99 @@ main: _
     };
     IO.print("# Main:\n");
     IO.print(Fm.Term.show(Fm.Term.normalize(main, defs)));
-    IO.print("");
-    IO.print("# JS:\n");
-    IO.print(Fm.Comp.js.defs(defs));
+    //IO.print("");
+    //IO.print("# JS:\n");
+    //IO.print(Fm.Comp.js.defs(defs));
   }
+
+  //type Bool {
+    //true,
+    //false,
+  //}
+
+  //Bool.elim(b: Bool, P: (x:Bool) Type, t: P(Bool.true), f: P(Bool.false)): P(b)
+    //case b {
+      //true: t,
+      //false: f,
+    //} : P(b.self)
+
+  //type Nat {
+    //zero,
+    //succ(pred: Nat),
+  //}
+
+  //type Vector (A: Type) ~ (size: Nat) {
+    //nil ~ (size: Nat.zero),
+    //ext(size: Nat, head: A, tail: Vector(A, size)) ~ (size: Nat.succ(size)),
+  //}
+
+  //type Equal (A: Type, a: A) ~ (b: A) {
+    //refl ~ (b: a),
+  //}
+
+  //id(A: Type, x: A): A
+    //x
+
+  //const(A: Type, B: Type, x: A, y: B): A
+    //x
+
+  //Nat.double(n: Nat): Nat
+    //case n {
+      //zero: Nat.zero,
+      //succ: Nat.succ(Nat.succ(Nat.double(n.pred))),
+    //}
+
+  //Nat.induce(n: Nat, P: (x:Nat) Type, z: P(Nat.zero), s: (n: Nat) (i: P(n)) P(Nat.succ(n))): P(n)
+    //case n {
+      //zero: z,
+      //succ: s(n.pred, Nat.induce(n.pred, P, z, s)),
+    //} : P(n.self)
+
+  //Equal.apply(A: Type, B: Type, a: A, b: A, f: (x:A) B, e: Equal(A, a, b)): Equal(B, f(a), f(b))
+    //case e {
+      //refl: Equal.refl(B, f(a)),
+    //} : Equal(B, f(a), f(e.b))
+
+  //Nat.same(n: Nat): Nat
+    //case n {
+      //zero: Nat.zero,
+      //succ: Nat.succ(Nat.same(n.pred)),
+    //}
+
+  //Nat.add(a: Nat, b: Nat): Nat
+    //case a with b : Nat = b {
+      //zero: b,
+      //succ: Nat.succ(Nat.add(a.pred, b)),
+    //} : Nat
+
+  //test0: Nat
+    //let n0 = Nat.zero;
+    //let n1 = Nat.succ(n0);
+    //let n2 = Nat.succ(n1);
+    //Nat.same(n2)
+
+  //test1(A: Type, B: Type, x: A, y: B): A
+    //const(_, _, x, y)
+
+  //Nat.add_zero(a: Nat): Equal(Nat, Nat.add(Nat.zero, a), Nat.add(a, Nat.zero))
+    //case a {
+      //zero:
+        //Equal.refl(Nat, Nat.zero),
+      //succ: 
+        //let p0 = Nat.add_zero(a.pred);
+        //let p1 = Equal.apply(_, _, _, _, Nat.succ, p0);
+        //p1,
+    //} : Equal(Nat, Nat.add(Nat.zero, a.self), Nat.add(a.self, Nat.zero))
+
+  //Nat.add_succ(a: Nat, b: Nat): Equal(Nat, Nat.add(a, Nat.succ(b)), Nat.succ(Nat.add(a, b)))
+    //case a {
+      //zero:
+        //Equal.refl(Nat, Nat.succ(b)),
+      //succ: 
+        //let p0 = Nat.add_succ(a.pred, b);
+        //let p1 = Equal.apply(_, _, _, _, Nat.succ, p0);
+        //p1,
+    //} : Equal(Nat, Nat.add(a.self, Nat.succ(b)), Nat.succ(Nat.add(a.self, b)))
+
+  //main: Nat
+    //Nat.double(3)

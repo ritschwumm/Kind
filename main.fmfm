@@ -1,0 +1,11 @@
+type Empty {
+}
+
+type Unit {
+  new
+}
+
+type Bool {
+  true,
+  false,
+}
