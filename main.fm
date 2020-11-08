@@ -1189,7 +1189,7 @@ type Fm.Term {
   ),
   // A hole to be auto-filled
   hol(
-    name: Fm.Name,
+    path: Bits,
   ),
   // A natural number
   nat(
@@ -1274,11 +1274,6 @@ type Fm.Error {
   // Patch the original term
   patch(
     path: Bits,
-    term: Fm.Term,
-  ),
-  // Fill a hole
-  fill(
-    name: Fm.Name,
     term: Fm.Term,
   ),
   // Some reference isn't found
@@ -1442,10 +1437,6 @@ Fm.Error.show(error: Fm.Error, defs: Fm.Defs): String
       String.flatten([
         "Patching: ", Fm.Term.show(error.term),
       ]),
-    fill:
-      String.flatten([
-        "Filling: ", Fm.Name.show(error.name), " = ", Fm.Term.show(error.term),
-      ]),
     undefined_reference: 
       String.flatten([
         "Undefined reference: ", Fm.Name.show(error.name)
@@ -1538,8 +1529,8 @@ Fm.Term.show.go(term: Fm.Term, path: Maybe(Bits -> Bits)): String
       let name = Fm.Name.show(term.name)
       String.flatten(["?", name]),
     hol:
-      let name = Fm.Name.show(term.name)
-      String.flatten(["_", name]),
+      //let path = Bits.show(term.path)
+      "_",
     nat:
       String.flatten([Nat.show(term.natx)]),
     chr:
@@ -1656,7 +1647,7 @@ Fm.Term.bind(vars: Fm.Context, path: Fm.Path, term: Fm.Term): Fm.Term
     gol:
       Fm.Term.gol(term.name, term.dref, term.verb),
     hol:
-      Fm.Term.hol(Fm.Name.read(Bits.show(Fm.Path.to_bits(path)))),
+      Fm.Term.hol(Fm.Path.to_bits(path)),
     nat:
       Fm.Term.nat(term.natx),
     chr:
@@ -1736,7 +1727,7 @@ Fm.Term.normalize(term: Fm.Term, defs: Fm.Defs): Fm.Term
     gol:
       Fm.Term.gol(term.name, term.dref, term.verb),
     hol:
-      Fm.Term.hol(term.name),
+      Fm.Term.hol(term.path),
     nat:
       Fm.Term.nat(term.natx),
     chr:
@@ -1747,8 +1738,8 @@ Fm.Term.normalize(term: Fm.Term, defs: Fm.Defs): Fm.Term
       term,
   }
 
-//// Patching
-//// ========
+// Patching
+// ========
 
 // PATCH_AT Does something at a specific path
 Fm.Term.patch_at(path: Bits, term: Fm.Term, fn: Fm.Term -> Fm.Term): Fm.Term
@@ -1803,51 +1794,6 @@ Fm.Term.expand(dref: List(Bits), term: Fm.Term, defs: Fm.Defs): Fm.Term
   let term = Fm.Term.normalize(term, Map.new<>)
   for path in dref with term:
     Fm.Term.normalize(Fm.Term.expand_at(path, term, defs), Map.new<>)
-
-// Fills a hole
-Fm.Term.fill(name: Fm.Name, value: Fm.Term, term: Fm.Term): Fm.Term
-  case term {
-    var:
-      term,
-    ref:
-      term,
-    typ:
-      term,
-    all:
-      def xtyp = Fm.Term.fill(name, value, term.xtyp)
-      def body = (s,x) Fm.Term.fill(name, value, term.body(s,x))
-      Fm.Term.all(term.eras, term.self, term.name, xtyp, body),
-    lam: 
-      def body = (x) Fm.Term.fill(name, value, term.body(x))
-      Fm.Term.lam(term.name, body),
-    app: 
-      def func = Fm.Term.fill(name, value, term.func)
-      def argm = Fm.Term.fill(name, value, term.argm)
-      Fm.Term.app(func, argm),
-    let:
-      def expr = Fm.Term.fill(name, value, term.expr)
-      def body = (x) Fm.Term.fill(name, value, term.body(x))
-      Fm.Term.let(term.name, expr, body),
-    ann: 
-      def expr = Fm.Term.fill(name, value, term.term)
-      def type = Fm.Term.fill(name, value, term.type)
-      Fm.Term.ann(term.done, expr, type),
-    gol:
-      term,
-    hol:
-      if Fm.Name.eql(term.name, name) then
-        Fm.Term.normalize(value, Map.new<>)
-      else
-        term,
-    nat:
-      term,
-    chr:
-      term,
-    str:
-      term,
-    sug:
-      term, // TODO: we fill inside sugars (yet)
-  }
 
 // Equality
 // ========
@@ -1915,8 +1861,8 @@ Fm.Term.serialize(term: Fm.Term, depth: Nat): Bits
   Fm.Term.serialize.go(term, depth, depth, Bits.nil)
 
 // Helper function
-Fm.Term.equal.fill(name: Fm.Name, term: Fm.Term): Fm.Check(Bool)
-  Fm.Check.result<>(Maybe.some<>(Bool.true), [Fm.Error.fill(name,term)])
+Fm.Term.equal.patch(path: Bits, term: Fm.Term): Fm.Check(Bool)
+  Fm.Check.result<>(Maybe.some<>(Bool.true), [Fm.Error.patch(path, Fm.Term.normalize(term, Map.new<>))])
 
 // EQUAL: Determines if two terms are equal
 Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Check(Bool)
@@ -1945,7 +1891,7 @@ Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Che
               return Bool.and(eq_type, eq_body);
             },
           hol:
-            Fm.Term.equal.fill(b1.name, a),
+            Fm.Term.equal.patch(b1.path, a),
           _: do Fm.Check {
             return Bool.false;
           },
@@ -1959,7 +1905,7 @@ Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Che
               var eq_body = Fm.Term.equal(a1_body, b1_body, defs, Nat.succ(lv), seen);
               return eq_body;
             },
-          hol: Fm.Term.equal.fill(b1.name, a),
+          hol: Fm.Term.equal.patch(b1.path, a),
           _: do Fm.Check {
             return Bool.false;
           },
@@ -1971,7 +1917,7 @@ Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Che
             var eq_argm = Fm.Term.equal(a1.argm, b1.argm, defs, lv, seen);
             return Bool.and(eq_func, eq_argm);
           },
-          hol: Fm.Term.equal.fill(b1.name, a),
+          hol: Fm.Term.equal.patch(b1.path, a),
           _: do Fm.Check {
             return Bool.false;
           },
@@ -1987,15 +1933,15 @@ Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Che
               return Bool.and(eq_expr, eq_body);
             },
           hol:
-            Fm.Term.equal.fill(b1.name, a),
+            Fm.Term.equal.patch(b1.path, a),
           _: do Fm.Check {
             return Bool.false;
           },
         },
       hol:
-        Fm.Term.equal.fill(a1.name, b),
+        Fm.Term.equal.patch(a1.path, b),
       _: case b1 {
-        hol: Fm.Term.equal.fill(b1.name, a),
+        hol: Fm.Term.equal.patch(b1.path, a),
         _: do Fm.Check {
           return Bool.false;
         },
@@ -2224,19 +2170,19 @@ Fm.synth.fix(
       //]))
       case errs.head {
         // The error is a fill
-        fill:
-          let filled_term = Fm.Term.fill(errs.head.name, errs.head.term, term)
-          let filled_type = Fm.Term.fill(errs.head.name, errs.head.term, type)
-          //use skip = Debug.log<>(String.flatten([
-            //"FILLING_TERM ",
-            //"\n-name:", Fm.Name.show(errs.head.name),
-            //"\n-hval:", Fm.Term.show(errs.head.term),
-            //"\n-term:", Fm.Term.show(term),
-            //"\n-type:", Fm.Term.show(type),
-            //"\n~term:", Fm.Term.show(filled_term),
-            //"\n~type:", Fm.Term.show(filled_type),
-          //]))
-          Fm.synth.fix(filled_term, filled_type, defs, errs.tail, Bool.true),
+        //fill:
+          //let filled_term = Fm.Term.fill(errs.head.name, errs.head.term, term)
+          //let filled_type = Fm.Term.fill(errs.head.name, errs.head.term, type)
+          ////use skip = Debug.log<>(String.flatten([
+            ////"FILLING_TERM ",
+            ////"\n-name:", Fm.Name.show(errs.head.name),
+            ////"\n-hval:", Fm.Term.show(errs.head.term),
+            ////"\n-term:", Fm.Term.show(term),
+            ////"\n-type:", Fm.Term.show(type),
+            ////"\n~term:", Fm.Term.show(filled_term),
+            ////"\n~type:", Fm.Term.show(filled_type),
+          ////]))
+          //Fm.synth.fix(filled_term, filled_type, defs, errs.tail, Bool.true),
         // The error is a patch
         patch: 
           case errs.head.path {
@@ -2978,7 +2924,7 @@ Fm.Parser.if: Parser(Fm.Term)
     Fm.Parser.spaces_text("else");
     var fcse = Fm.Parser.term;
     let term = cond;
-    let term = Fm.Term.app(term, Fm.Term.lam([], (x) Fm.Term.hol([])));
+    let term = Fm.Term.app(term, Fm.Term.lam([], (x) Fm.Term.hol(Bits.nil)));
     let term = Fm.Term.app(term, tcse);
     let term = Fm.Term.app(term, fcse);
     return term;
@@ -3034,10 +2980,10 @@ Fm.Parser.list: Parser(Fm.Term)
     var vals = Parser.many<>(Fm.Parser.item<>(Fm.Parser.term));
     Parser.spaces_text("]");
     return List.fold<>(vals)<>(
-      Fm.Term.app(Fm.Term.ref(Fm.Name.read("List.nil")), Fm.Term.hol([])),
+      Fm.Term.app(Fm.Term.ref(Fm.Name.read("List.nil")), Fm.Term.hol(Bits.nil)),
       (x,xs)
         let term = Fm.Term.ref(Fm.Name.read("List.cons"))
-        let term = Fm.Term.app(term, Fm.Term.hol([]))
+        let term = Fm.Term.app(term, Fm.Term.hol(Bits.nil))
         let term = Fm.Term.app(term, x)
         let term = Fm.Term.app(term, xs)
         term);
@@ -3095,7 +3041,7 @@ Fm.Parser.case: Parser(Fm.Term)
       Fm.Parser.spaces_text(":");
       Fm.Parser.term;
     });
-    let moti = case moti { none: Fm.Term.hol([]), some: moti.value };
+    let moti = case moti { none: Fm.Term.hol(Bits.nil), some: moti.value };
     let sugr = Fm.Sugar.cse(expr, name, with, cses, moti);
     let term = Fm.Term.sug(sugr);
     return 
@@ -3129,7 +3075,7 @@ Fm.Parser.goal: Parser(Fm.Term)
 Fm.Parser.hole: Parser(Fm.Term)
   do Parser {
     Fm.Parser.spaces_text("_");
-    return Fm.Term.hol([]);
+    return Fm.Term.hol(Bits.nil);
   }
 
 // Parses a natural number: `123`
