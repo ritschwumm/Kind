@@ -1132,11 +1132,11 @@ Debug.log<A: Type>(s: String, x: Unit -> A): A
 //    62 is .
 //    63 is _
 Fm.Letter: Type
-  Word(6)
+  Char
 
 // A Formality Name is a list of letters
 Fm.Name: Type
-  List(Fm.Letter)
+  String
 
 // A Formality term (high-order)
 type Fm.Term {
@@ -2435,7 +2435,7 @@ Fm.Term.desugar_cse.motive(
         def all_name = with.head.name
         def all_xtyp = with.head.type
         def all_body = (s,x) Fm.Term.desugar_cse.motive(with.tail, moti)
-        Fm.Term.all(Bool.false, [], all_name, all_xtyp, all_body)
+        Fm.Term.all(Bool.false, "", all_name, all_xtyp, all_body)
     },
     nil: moti,
   }
@@ -2451,7 +2451,7 @@ Fm.Term.desugar_cse.argument(
   case Fm.Term.reduce(type, defs) as type {
     all:
       def type = type.body(Fm.Term.var(type.self,0), Fm.Term.var(type.name,0))
-      def lam_name = List.flatten<>([name, Fm.Name.read("."), type.name])
+      def lam_name = String.flatten([name, Fm.Name.read("."), type.name])
       def lam_body = (x) Fm.Term.desugar_cse.argument(name, with, type, body, defs)
       Fm.Term.lam(lam_name, lam_body),
     _: case with {
@@ -2484,7 +2484,7 @@ Fm.Datatype.build_type.go(
         def par_name = pars.head.name
         def par_xtyp = pars.head.term
         def par_body = (s,x) Fm.Datatype.build_type.go(type, name, pars.tail, inds)
-        Fm.Term.all(Bool.false, [], par_name, par_xtyp, par_body)
+        Fm.Term.all(Bool.false, "", par_name, par_xtyp, par_body)
     },
     nil: case inds {
       cons: case inds.head {
@@ -2493,7 +2493,7 @@ Fm.Datatype.build_type.go(
           def ind_name = inds.head.name
           def ind_xtyp = inds.head.term
           def ind_body = (s,x) Fm.Datatype.build_type.go(type, name, pars, inds.tail)
-          Fm.Term.all(Bool.false, [], ind_name, ind_xtyp, ind_body)
+          Fm.Term.all(Bool.false, "", ind_name, ind_xtyp, ind_body)
       },
       nil: Fm.Term.typ,
     }
@@ -2518,7 +2518,7 @@ Fm.Datatype.build_term.motive.go(
       def ind_name = case inds.head { new: inds.head.name }
       def ind_xtyp = case inds.head { new: inds.head.term }
       def ind_body = (s,x) Fm.Datatype.build_term.motive.go(type, name, inds.tail)
-      Fm.Term.all(ind_eras, [], ind_name, ind_xtyp, ind_body),
+      Fm.Term.all(ind_eras, "", ind_name, ind_xtyp, ind_body),
     nil:
       open type
       let slf = Fm.Term.ref(name)
@@ -2526,7 +2526,7 @@ Fm.Datatype.build_term.motive.go(
         Fm.Term.app(slf, Fm.Term.ref(case var { new: var.name }))
       let slf = for var in type.inds:
         Fm.Term.app(slf, Fm.Term.ref(case var { new: var.name }))
-      Fm.Term.all(Bool.false, [], Fm.Name.read("self"), slf, (s,x) Fm.Term.typ)
+      Fm.Term.all(Bool.false, "", Fm.Name.read("self"), slf, (s,x) Fm.Term.typ)
   }
 
 // Builds the term of a datatype (constructors)
@@ -2541,7 +2541,7 @@ Fm.Datatype.build_term.constructors.go(
 ): Fm.Term
   case ctrs {
     cons: case ctrs.head {
-      new: Fm.Term.all(Bool.false, [],
+      new: Fm.Term.all(Bool.false, "",
         ctrs.head.name,
         Fm.Datatype.build_term.constructor(type, ctrs.head),
         (s,x) Fm.Datatype.build_term.constructors.go(type, ctrs.tail))
@@ -2571,14 +2571,14 @@ Fm.Datatype.build_term.constructor.go(
       let name = case args.head { new: args.head.name }
       let xtyp = case args.head { new: args.head.term }
       let body = Fm.Datatype.build_term.constructor.go(type, ctor, args.tail)
-      Fm.Term.all(eras, [], name, xtyp, (s,x) body),
+      Fm.Term.all(eras, "", name, xtyp, (s,x) body),
     nil:
       open type
       open ctor
       let ret = Fm.Term.ref(Fm.Name.read("P"))
       let ret = for var in ctor.inds:
         Fm.Term.app(ret, case var { new: var.term })
-      let ctr = List.flatten<>([type.name,Fm.Name.read("."),ctor.name])
+      let ctr = String.flatten([type.name,Fm.Name.read("."),ctor.name])
       let slf = Fm.Term.ref(ctr)
       let slf = for var in type.pars:
         Fm.Term.app(slf, Fm.Term.ref(case var { new: var.name }))
@@ -2641,14 +2641,14 @@ Fm.Constructor.build_type.go(
       def par_name = case pars.head { new: pars.head.name }
       def par_xtyp = case pars.head { new: pars.head.term }
       def par_body = (s,x) Fm.Constructor.build_type.go(type, ctor, name, pars.tail, args)
-      Fm.Term.all(par_eras, [], par_name, par_xtyp, par_body),
+      Fm.Term.all(par_eras, "", par_name, par_xtyp, par_body),
     nil: case args {
       cons:
         def ctr_eras = case args.head { new: args.head.eras }
         def ctr_name = case args.head { new: args.head.name }
         def ctr_xtyp = case args.head { new: args.head.term }
         def ctr_body = (s,x) Fm.Constructor.build_type.go(type, ctor, name, pars, args.tail)
-        Fm.Term.all(ctr_eras, [], ctr_name, ctr_xtyp, ctr_body),
+        Fm.Term.all(ctr_eras, "", ctr_name, ctr_xtyp, ctr_body),
       nil:
         open type
         open ctor
@@ -2727,63 +2727,58 @@ Fm.Constructor.build_term.go(
 // Parsing
 // =======
 
-// Converts a Char to a Letter
-Fm.Letter.read(chr: Char): Maybe(Fm.Letter)
-  def some = ((n) Maybe.some<>(Word.trim<16>(6, U16.to_word(n)))) :: U16 -> _
-  def none = Maybe.none<>
-  if      U16.btw('A', chr, 'Z') then some(U16.sub(chr, 65s))
-  else if U16.btw('a', chr, 'z') then some(U16.sub(chr, 71s))
-  else if U16.btw('0', chr, '9') then some(U16.add(chr, 4s))
-  else if U16.eql('.', chr)      then some(62s)
-  else if U16.eql('_', chr)      then some(63s)
-  else                                none
-
-// Converts a Letter to a Char
-Fm.Letter.show(ltr: Fm.Letter): Char
-  let ltr = U16.new(Word.trim<6>(16, ltr))
-  if      U16.btw( 0s, ltr, 25s) then U16.add(ltr, 65s)
-  else if U16.btw(26s, ltr, 51s) then U16.add(ltr, 71s)
-  else if U16.btw(52s, ltr, 61s) then U16.sub(ltr, 4s)
-  else if U16.eql(62s, ltr)      then 46s
-  else                                95s
+// Is this character a valid letter?
+Fm.Name.is_letter(chr: Char): Bool
+  if      U16.btw('A', chr, 'Z') then Bool.true
+  else if U16.btw('a', chr, 'z') then Bool.true
+  else if U16.btw('0', chr, '9') then Bool.true
+  else if U16.eql('.', chr)      then Bool.true
+  else if U16.eql('_', chr)      then Bool.true
+  else                                Bool.false
 
 // Converts a String to a Fm.Name
 Fm.Name.read(str: String): Fm.Name
-  case str {
-    nil: List.nil<>,
-    cons: case Fm.Letter.read(str.head) as got {
-      none: List.nil<>,
-      some: List.cons<>(got.value, Fm.Name.read(str.tail)),
-    }
-  }
+  str
 
 // Converts a Fm.Name to a String
 Fm.Name.show(name: Fm.Name): String
-  case name {
-    nil: String.nil,
-    cons: String.cons(Fm.Letter.show(name.head), Fm.Name.show(name.tail)),
-  }
+  name
   
-//// Converts a name to a bits
+// Converts a name to a bits
 Fm.Name.to_bits(name: Fm.Name): Bits
   case name {
-    nil: Bits.nil,
-    cons: Bits.concat(Bits.reverse(Word.to_bits<6>(name.head)), Fm.Name.to_bits(name.tail)),
+    nil:
+      Bits.nil,
+    cons:
+      let chr = name.head
+      let u16 = 
+        if      U16.btw('A', chr, 'Z') then U16.sub(chr, 65s)
+        else if U16.btw('a', chr, 'z') then U16.sub(chr, 71s)
+        else if U16.btw('0', chr, '9') then U16.add(chr, 4s)
+        else if U16.eql('.', chr)      then 62s
+        else if U16.eql('_', chr)      then 63s
+        else                                0s
+      let bts = case u16 { new: Word.to_bits<6>(Word.trim<16>(6, u16.value)) }
+      Bits.concat(Bits.reverse(bts), Fm.Name.to_bits(name.tail)),
   }
 
 //// Converts a bits to a name
 Fm.Name.from_bits(bits: Bits): Fm.Name
   let list = Bits.chunks_of(6, bits)
-  let name = List.map<,>((x) Word.from_bits(6,Bits.reverse(x)), list)
+  let name = List.fold<>(list)<>(String.nil, (bts, name)
+    let u16 = U16.new(Word.from_bits(16, Bits.reverse(bts)))
+    let chr = 
+      if      U16.btw( 0s, u16, 25s) then U16.add(u16, 65s)
+      else if U16.btw(26s, u16, 51s) then U16.add(u16, 71s)
+      else if U16.btw(52s, u16, 61s) then U16.sub(u16, 4s)
+      else if U16.eql(62s, u16)      then 46s
+      else                                95s
+    String.cons(chr, name))
   name
-
-// Are two letters the same?
-Fm.Letter.eql(a: Fm.Letter, b: Fm.Letter): Bool
-  Word.eql<6>(a, b)
 
 // Are two names the same?
 Fm.Name.eql(a: Fm.Name, b: Fm.Name): Bool
-  List.eql<>(Fm.Letter.eql, a, b)
+  String.eql(a, b)
 
 // Spaces and comments
 Fm.Parser.spaces: Parser(List(Unit))
@@ -2808,19 +2803,26 @@ Fm.Parser.spaces_text(text: String): Parser(Unit)
 Fm.Parser.letter: Parser(Fm.Letter)
   (code) case code {
     nil: Parser.Reply.error<>(code, "Unexpected eof."),
-    cons: case Fm.Letter.read(code.head) as got {
-      none: Parser.Reply.error<>(code, "Expected letter."),
-      some: Parser.Reply.value<>(code.tail, got.value),
-    }
+    cons:
+      if Fm.Name.is_letter(code.head) then
+        Parser.Reply.value<>(code.tail, code.head)
+      else
+        Parser.Reply.error<>(code, "Expected letter."),
   }
   
 // Parses a (possibly empty) name: `[a-zA-Z_.]*`
 Fm.Parser.name: Parser(Fm.Name)
-  Parser.many<Fm.Letter>(Fm.Parser.letter)
+  do Parser {
+    var chrs = Parser.many<Fm.Letter>(Fm.Parser.letter);
+    return List.fold<>(chrs)<>(String.nil, String.cons);
+  }
 
 // Parses a non-empty name: `[a-zA-Z_.]+`
 Fm.Parser.name1: Parser(Fm.Name)
-  Parser.many1<Fm.Letter>(Fm.Parser.letter)
+  do Parser {
+    var chrs = Parser.many1<Fm.Letter>(Fm.Parser.letter);
+    return List.fold<>(chrs)<>(String.nil, String.cons);
+  }
 
 // Parses a type: `Type`
 Fm.Parser.type: Parser(Fm.Term)
@@ -2893,7 +2895,7 @@ Fm.Parser.forall: Parser(Fm.Term)
     Parser.maybe<>(Parser.spaces_text("->"));
     var body = Fm.Parser.term;
     let term = List.fold<>(bind)<>(body, (x,t) case x {
-      new: Fm.Term.all(x.eras, [], x.name, x.term, (s,x) t)
+      new: Fm.Term.all(x.eras, "", x.name, x.term, (s,x) t)
     });
     return case term {
       all: Fm.Term.all(term.eras, self, term.name, term.xtyp, term.body),
@@ -2924,7 +2926,7 @@ Fm.Parser.if: Parser(Fm.Term)
     Fm.Parser.spaces_text("else");
     var fcse = Fm.Parser.term;
     let term = cond;
-    let term = Fm.Term.app(term, Fm.Term.lam([], (x) Fm.Term.hol(Bits.nil)));
+    let term = Fm.Term.app(term, Fm.Term.lam("", (x) Fm.Term.hol(Bits.nil)));
     let term = Fm.Term.app(term, tcse);
     let term = Fm.Term.app(term, fcse);
     return term;
@@ -3123,7 +3125,7 @@ Fm.Parser.arrow(xtyp: Fm.Term): Parser(Fm.Term)
   do Parser {
     Parser.spaces_text("->");
     var body = Fm.Parser.term;
-    return Fm.Term.all(Bool.false, [], [], xtyp, (s,x) body);
+    return Fm.Term.all(Bool.false, "", "", xtyp, (s,x) body);
   }
 
 // Parses an annotation: `term :: type`
@@ -3188,7 +3190,7 @@ Fm.Parser.make_forall(binds: List(Fm.Binder), body: Fm.Term): Fm.Term
     cons: case binds.head {
       new:
         def all_eras = binds.head.eras
-        def all_self = []
+        def all_self = ""
         def all_name = binds.head.name
         def all_xtyp = binds.head.term
         def all_body = (s,x) Fm.Parser.make_forall(binds.tail, body)
@@ -3273,7 +3275,7 @@ Fm.Parser.file.go(defs: Fm.Defs): Parser(Fm.Defs)
               let defs = Fm.set<>(adt.value.name, Fm.Def.new(adt.value.name, term, type, Bool.false), defs)
               let defs = List.fold<>(adt.value.ctrs)<>(defs, (ctr, defs)
                 let typ_name = adt.value.name
-                let ctr_name = List.flatten<>([typ_name, Fm.Name.read("."), case ctr { new: ctr.name }])
+                let ctr_name = String.flatten([typ_name, Fm.Name.read("."), case ctr { new: ctr.name }])
                 let ctr_term = Fm.Constructor.build_term(adt.value, ctr)
                 let ctr_term = Fm.Term.bind([], (x) Bits.1(x), ctr_term)
                 let ctr_type = Fm.Constructor.build_type(adt.value, ctr)
