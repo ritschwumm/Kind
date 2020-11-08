@@ -3025,7 +3025,22 @@ Fm.Parser.string: Parser(Fm.Term)
     Parser.text("\"");
     let strx = List.fold<>(chrs)<>(String.nil, String.cons);
     return Fm.Term.str(strx);
-    //return Debug.log<>(strx, () Fm.Term.typ);
+  }
+
+// Parses a list literal: `[1, 2, 3]`
+Fm.Parser.list: Parser(Fm.Term)
+  do Parser {
+    Parser.spaces_text("[");
+    var vals = Parser.many<>(Fm.Parser.item<>(Fm.Parser.term));
+    Parser.spaces_text("]");
+    return List.fold<>(vals)<>(
+      Fm.Term.app(Fm.Term.ref(Fm.Name.read("List.nil")), Fm.Term.hol([])),
+      (x,xs)
+        let term = Fm.Term.ref(Fm.Name.read("List.cons"))
+        let term = Fm.Term.app(term, Fm.Term.hol([]))
+        let term = Fm.Term.app(term, x)
+        let term = Fm.Term.app(term, xs)
+        term);
   }
 
 // Parses a with statement of a case
@@ -3196,6 +3211,7 @@ Fm.Parser.term: Parser(Fm.Term)
       Fm.Parser.if,
       Fm.Parser.char,
       Fm.Parser.string,
+      Fm.Parser.list,
       Fm.Parser.case,
       Fm.Parser.goal,
       Fm.Parser.hole,

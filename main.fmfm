@@ -94,6 +94,9 @@ type IO <A: Type> {
   ask(query: String, param: String, then: (response: String) IO(A)),
 }
 
+// Prereqs
+// =======
+
 // If we have an element of the empty type, then we can prove anything.
 Empty.absurd<P: Type>(x: Empty): P
   case x {}
@@ -168,16 +171,36 @@ Nat.apply<A: Type>(n: Nat, f: (x:A) A, x: A): A
     succ: Nat.apply<A>(n.pred, f, f(x)),
   }
 
-//Nat.to_base(base: Nat, nat: Nat): List(Nat)
-  //Nat.to_base.go(base, nat, List.nil<Nat>)
+Nat.to_base(base: Nat, nat: Nat): List(Nat)
+  Nat.to_base.go(base, nat, List.nil<Nat>)
 
-//Nat.to_base.go(base: Nat, nat: Nat, res: List(Nat)): List(Nat)
-  //case Nat.div_mod(nat, base) as div_mod {
-    //new: case div_mod.fst {
-      //zero: List.cons<_>(div_mod.snd, res),
-      //succ: Nat.to_base.go(base, div_mod.fst, List.cons<>(div_mod.snd, res))
-    //} 
-  //}
+Nat.to_base.go(base: Nat, nat: Nat, res: List(Nat)): List(Nat)
+  case Nat.div_mod(nat, base) as div_mod {
+    new: case div_mod.fst {
+      zero: List.cons<_>(div_mod.snd, res),
+      succ: Nat.to_base.go(base, div_mod.fst, List.cons<_>(div_mod.snd, res))
+    } 
+  }
+
+Nat.from_base(base: Nat, ds: List(Nat)) : Nat
+  Nat.from_base.go(base, List.reverse<_>(ds),1,0)
+
+Nat.from_base.go(b: Nat, ds: List(Nat), p: Nat, res: Nat) : Nat
+  case ds {
+    nil: res,
+    cons: Nat.from_base.go(b,ds.tail,Nat.mul(b,p), Nat.add(Nat.mul(ds.head,p),res))
+  }
+
+Nat.to_bits(n: Nat): Bits
+  case n {
+    zero: Bits.nil,
+    succ: Bits.inc(Nat.to_bits(n.pred))
+  }
+
+Nat.to_string_base(base: Nat, nat: Nat): String
+  List.fold<_>(Nat.to_base(base, nat))<_>(
+    String.nil,
+    (n, str) String.cons(Nat.show_digit(base,n), str))
 
 Nat.to_bits(n: Nat): Bits
   case n {
@@ -248,6 +271,46 @@ Nat.double(n: Nat): Nat
     succ: Nat.succ(Nat.double(n.pred)),
   }
 
+// n >= m
+Nat.gte(n: Nat, m: Nat): Bool
+  Cmp.as_gte(Nat.cmp(n, m))
+
+// n > m
+Nat.gtn(n: Nat, m: Nat): Bool
+  Cmp.as_gtn(Nat.cmp(n, m))
+
+// n == m
+Nat.eql(n: Nat, m: Nat): Bool
+  Cmp.as_eql(Nat.cmp(n, m))
+
+// n <= m
+Nat.lte(n: Nat, m: Nat): Bool
+  Cmp.as_lte(Nat.cmp(n, m))
+
+// n < m
+Nat.ltn(n: Nat, m: Nat): Bool
+  Cmp.as_ltn(Nat.cmp(n, m))
+
+Nat.show(n: Nat): String
+  Nat.to_string_base(10,n)
+
+Nat.show_digit(base: Nat, n: Nat) : Char
+  let m = Nat.mod(n,base);
+  let base64 =
+    ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+    ,'G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V'
+    ,'W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l'
+    ,'m','n','o','p','q','r','s','t','u','v','w','x','y','z','+','/'];
+  if Bool.and(Nat.gtn(base,0),Nat.lte(base,64)) then 
+    case List.at<_>(m,base64) as c {
+      none: '#',
+      some: c.value,
+    }
+  else '#'
+
+Nat.to_u16(n: Nat): U16
+  Nat.apply<U16>(n, U16.inc, U16.zero)
+
 Bits.inc(a: Bits): Bits
   case a {
     nil: Bits.1(Bits.nil),
@@ -296,12 +359,12 @@ Bits.tail(a: Bits): Bits
     1: a.pred,
   }
 
-//Bits.show(a: Bits): String
-  //case a {
-    //nil: "",
-    //0: String.cons('0', Bits.show(a.pred)),
-    //1: String.cons('1', Bits.show(a.pred)),
-  //}
+Bits.show(a: Bits): String
+  case a {
+    nil: "",
+    0: String.cons('0', Bits.show(a.pred)),
+    1: String.cons('1', Bits.show(a.pred)),
+  }
 
 Bits.reverse(a: Bits): Bits
   Bits.reverse.tco(a, Bits.nil)
@@ -313,6 +376,58 @@ Bits.reverse.tco(a: Bits, r: Bits): Bits
     1: Bits.reverse.tco(a.pred, Bits.1(r))
   }
 
+Bits.concat(a: Bits, b: Bits): Bits
+  case a {
+    nil: b,
+    0: Bits.0(Bits.concat(a.pred, b)),
+    1: Bits.1(Bits.concat(a.pred, b))
+  }
+
+Bits.chunks_of.go(
+  len   : Nat,  // length of each chunk
+  bits  : Bits, // bits to be split
+  need  : Nat,  // number of vals to complete chunk
+  chunk : Bits  // current chunk
+) : List(Bits)
+  case bits {
+    nil: List.cons<_>(Bits.reverse(chunk), List.nil<_>),
+    0: case need {
+      zero: 
+        let head = Bits.reverse(chunk);
+        let tail = Bits.chunks_of.go(len, bits, len, Bits.nil);
+        List.cons<_>(head, tail),
+      succ:
+        let chunk = Bits.0(chunk);
+        Bits.chunks_of.go(len, bits.pred, need.pred, chunk)
+    },
+    1: case need {
+      zero:
+        let head = Bits.reverse(chunk);
+        let tail = Bits.chunks_of.go(len, bits, len, Bits.nil);
+        List.cons<_>(head, tail),
+      succ:
+        let chunk = Bits.1(chunk);
+        Bits.chunks_of.go(len, bits.pred, need.pred, chunk)
+    }
+  }
+
+Bits.chunks_of(len: Nat, bits: Bits): List(Bits)
+  Bits.chunks_of.go(len, bits, len, Bits.nil)
+
+Bits.to_nat(b: Bits): Nat
+  case b {
+    nil: 0,
+     0 : Nat.mul(2, Bits.to_nat(b.pred)),
+     1 : Nat.succ(Nat.mul(2, Bits.to_nat(b.pred)))
+  }
+
+Word.to_bits<size: Nat>(a: Word(size)): Bits
+  case a {
+    nil: Bits.nil,
+    0: Bits.0(Word.to_bits<a.size>(a.pred)),
+    1: Bits.1(Word.to_bits<a.size>(a.pred)),
+  }
+
 Word.from_bits(size: Nat, bits: Bits): Word(size)
   case size {
     zero: Word.nil,
@@ -322,6 +437,70 @@ Word.from_bits(size: Nat, bits: Bits): Word(size)
        1 : Word.1<size.pred>(Word.from_bits(size.pred, bits.pred))
     } : Word(Nat.succ(size.pred))
   } : Word(size.self)
+
+Word.zero(size: Nat): Word(size)
+  case size {
+    zero: Word.nil,
+    succ: Word.0<size.pred>(Word.zero(size.pred))
+  } : Word(size.self)
+
+Word.adder<size: Nat>(a: Word(size), b: Word(size), c: Bool): Word(size)
+  case a with b: Word(a.size) = b {
+    nil: Word.nil,
+    0 : case b with a.pred: Word(Nat.pred(b.size)) = a.pred {
+      nil: Word.nil,
+      0: case c {
+        true : Word.1<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.false)),
+        false: Word.0<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.false)),
+      },
+      1: case c {
+        true:  Word.0<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.1<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.false)),
+      }
+    } : Word(b.size),
+    1: case b with a.pred: Word(Nat.pred(b.size)) = a.pred {
+      nil: Word.nil,
+      0: case c {
+        true : Word.0<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.1<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.false)),
+      },
+      1: case c {
+        true : Word.1<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.0<b.size>(Word.adder<b.size>(a.pred, b.pred, Bool.true)),
+      }
+    } : Word(b.size)
+  } : Word(a.size)
+
+Word.cmp.go<size: Nat>(a: Word(size), b: Word(size), c: Cmp): Cmp
+  case a with b : Word(a.size) = b {
+    nil: c,
+    0 : case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
+      nil: c,
+      0  : Word.cmp.go<b.size>(a.pred, b.pred, c),
+      1  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.ltn)
+    },
+    1: case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
+      nil: c,
+      0  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.gtn),
+      1  : Word.cmp.go<b.size>(a.pred, b.pred, c)
+    }
+  }
+
+// ++a
+Word.inc<size: Nat>(word: Word(size)): Word(size)
+  case word {
+    nil: Word.nil,
+     0 : Word.1<word.size>(word.pred),
+     1 : Word.0<word.size>(Word.inc<word.size>(word.pred))
+  } : Word(word.size)
+
+U16.zero: U16
+  U16.new(Word.zero(16))
+
+U16.inc(a: U16): U16
+  case a {
+    new: U16.new(Word.inc<_>(a.value))
+  }
 
 Pair.fst<A: Type, B: Type>(pair: Pair(A, B)): A
   case pair {
@@ -539,6 +718,6 @@ String.concat(as: String, bs: String): String
 //main: Nat
   //(((x) x) :: _ -> _)(Nat.zero)
 
-main: String
-  "hi"
+main: List(Nat)
+  [1, 2, 3]
   //U16.new(Word.from_bits(16))
