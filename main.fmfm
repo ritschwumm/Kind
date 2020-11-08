@@ -539,6 +539,6 @@ String.concat(as: String, bs: String): String
 //main: Nat
   //(((x) x) :: _ -> _)(Nat.zero)
 
-main: Char
-  'a'
+main: String
+  "hi"
   //U16.new(Word.from_bits(16))
