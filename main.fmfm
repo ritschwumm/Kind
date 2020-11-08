@@ -255,6 +255,54 @@ Bits.inc(a: Bits): Bits
     1: Bits.0(Bits.inc(a.pred)),
   }
 
+Bits.add(a: Bits, b: Bits): Bits
+  case b {
+    nil: a,
+    0: case a {
+      nil: b,
+      0: Bits.0(Bits.add(a.pred, b.pred)),
+      1: Bits.1(Bits.add(a.pred, b.pred)),
+    },
+    1: case a {
+      nil: b,
+      0: Bits.1(Bits.add(a.pred, b.pred)),
+      1: Bits.0(Bits.add(Bits.inc(a.pred), b.pred))
+    }
+  }
+
+Bits.eql(a: Bits, b: Bits): Bool
+  case a {
+    nil: case b {
+      nil: Bool.true,
+       0 : Bool.false,
+       1 : Bool.false,
+    },
+    0: case b {
+      nil: Bool.false,
+       0 : Bits.eql(a.pred, b.pred),
+       1 : Bool.false,
+    },
+    1: case b {
+      nil: Bool.false,
+       0 : Bool.false,
+       1 : Bits.eql(a.pred, b.pred),
+    }
+  }
+
+Bits.tail(a: Bits): Bits
+  case a {
+    nil: Bits.nil,
+    0: a.pred,
+    1: a.pred,
+  }
+
+//Bits.show(a: Bits): String
+  //case a {
+    //nil: "",
+    //0: String.cons('0', Bits.show(a.pred)),
+    //1: String.cons('1', Bits.show(a.pred)),
+  //}
+
 Bits.reverse(a: Bits): Bits
   Bits.reverse.tco(a, Bits.nil)
 
@@ -264,6 +312,16 @@ Bits.reverse.tco(a: Bits, r: Bits): Bits
     0: Bits.reverse.tco(a.pred, Bits.0(r)),
     1: Bits.reverse.tco(a.pred, Bits.1(r))
   }
+
+Word.from_bits(size: Nat, bits: Bits): Word(size)
+  case size {
+    zero: Word.nil,
+    succ: case bits {
+      nil: Word.0<size.pred>(Word.from_bits(size.pred, Bits.nil)),
+       0 : Word.0<size.pred>(Word.from_bits(size.pred, bits.pred)),
+       1 : Word.1<size.pred>(Word.from_bits(size.pred, bits.pred))
+    } : Word(Nat.succ(size.pred))
+  } : Word(size.self)
 
 Pair.fst<A: Type, B: Type>(pair: Pair(A, B)): A
   case pair {
@@ -478,8 +536,9 @@ String.concat(as: String, bs: String): String
   //String.flatten.go(xs, "")
 
 
-main: Nat
-  if Bool.false then
-    Nat.succ(Nat.zero)
-  else
-    Nat.zero
+//main: Nat
+  //(((x) x) :: _ -> _)(Nat.zero)
+
+main: Char
+  'a'
+  //U16.new(Word.from_bits(16))

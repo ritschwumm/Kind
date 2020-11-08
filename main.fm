@@ -43,12 +43,12 @@ type Maybe <A: Type> {
   some(value: A),
 }
 
-type Either<A: Type, B: Type> {
+type Either <A: Type, B: Type> {
   left(value: A),
   right(value: B),
 }
 
-type Pair<A: Type, B: Type> {
+type Pair <A: Type, B: Type> {
   new(fst: A, snd: B)
 }
 
@@ -422,6 +422,16 @@ Word.to_bits<size: Nat>(a: Word(size)): Bits
     1: Bits.1(Word.to_bits<a.size>(a.pred)),
   }
 
+Word.from_bits(size: Nat, bits: Bits): Word(size)
+  case size {
+    zero: Word.nil,
+    succ: case bits {
+      nil: Word.0<size.pred>(Word.from_bits(size.pred, Bits.nil)),
+       0 : Word.0<size.pred>(Word.from_bits(size.pred, bits.pred)),
+       1 : Word.1<size.pred>(Word.from_bits(size.pred, bits.pred))
+    } : Word(Nat.succ(size.pred))
+  } : Word(size.self)
+
 Word.zero(size: Nat): Word(size)
   case size {
     zero: Word.nil,
@@ -505,16 +515,6 @@ Word.foldl<P: Nat -> Type, m: Nat>
       def w1  = <x> w1<Nat.succ(x)>
       Word.foldl<P, word.size>(nil, w0, w1, word.pred)
   } : P(word.size)
-
-Word.from_bits(size: Nat, bits: Bits): Word(size)
-  case size {
-    zero: Word.nil,
-    succ: case bits {
-      nil: Word.0<size.pred>(Word.from_bits(size.pred, Bits.nil)),
-       0 : Word.0<size.pred>(Word.from_bits(size.pred, bits.pred)),
-       1 : Word.1<size.pred>(Word.from_bits(size.pred, bits.pred))
-    } : Word(Nat.succ(size.pred))
-  } : Word(size.self)
 
 Word.trim<size: Nat>(new_size: Nat, word: Word(size)): Word(new_size)
   case new_size {
@@ -1004,6 +1004,12 @@ Parser.text(text: String): Parser(Unit)
     value: Parser.Reply.value<Unit>(reply.code, reply.value),
   }
 
+Parser.one: Parser(Char)
+  (code) case code {
+    nil: Parser.Reply.error<Char>(code, "Unexpected end of file."),
+    cons: Parser.Reply.value<Char>(code.tail, code.head),
+  }
+
 // Repeats a parse until it fails, returns a list of results
 Parser.many<V: Type>(parser: Parser(V)): Parser(List(V))
   Parser.many.go<V>(parser, (x) x)
@@ -1179,6 +1185,10 @@ type Fm.Term {
   // A natural number
   nat(
     natx: Nat,
+  ),
+  // A character
+  chr(
+    chrx: Char,
   ),
   // A syntax sugar
   sug(
@@ -1519,6 +1529,8 @@ Fm.Term.show.go(term: Fm.Term, path: Maybe(Bits -> Bits)): String
       String.flatten(["_", name]),
     nat:
       String.flatten([Nat.show(term.natx)]),
+    chr:
+      String.cons(term.chrx, String.nil),
     sug:
       case term.sugx {
         app:
@@ -1632,6 +1644,8 @@ Fm.Term.bind(vars: Fm.Context, path: Fm.Path, term: Fm.Term): Fm.Term
       Fm.Term.hol(Fm.Name.read(Bits.show(Fm.Path.to_bits(path)))),
     nat:
       Fm.Term.nat(term.natx),
+    chr:
+      Fm.Term.chr(term.chrx),
     sug: case term.sugx { // The TODOs below aren't essential/reachable (for now)
       app:
         let func = Fm.Term.bind(vars, Fm.Path.0(path), term.sugx.func)
@@ -1667,6 +1681,8 @@ Fm.Term.reduce(term: Fm.Term, defs: Fm.Defs): Fm.Term
       Fm.Term.reduce(term.term, defs),
     nat:
       Fm.Term.reduce(Fm.Term.unroll_nat(term.natx), defs),
+    chr:
+      Fm.Term.reduce(Fm.Term.unroll_chr(term.chrx), defs),
     _: term,
   }
 
@@ -1704,6 +1720,8 @@ Fm.Term.normalize(term: Fm.Term, defs: Fm.Defs): Fm.Term
       Fm.Term.hol(term.name),
     nat:
       Fm.Term.nat(term.natx),
+    chr:
+      Fm.Term.chr(term.chrx),
     sug:
       term,
   }
@@ -1802,6 +1820,8 @@ Fm.Term.fill(name: Fm.Name, value: Fm.Term, term: Fm.Term): Fm.Term
         term,
     nat:
       term,
+    chr:
+      term,
     sug:
       term, // TODO: we fill inside sugars (yet)
   }
@@ -1858,6 +1878,8 @@ case term {
   hol:
     x,
   nat:
+    x,
+  chr:
     x,
   sug:
     x,
@@ -2093,6 +2115,8 @@ Fm.Term.check(
         },
       nat:
         Fm.Term.check(Fm.Term.unroll_nat(term.natx), type, defs, ctx, path),
+      chr:
+        Fm.Term.check(Fm.Term.unroll_chr(term.chrx), type, defs, ctx, path),
       sug: do Fm.Check {
         let expr = case term.sugx {
           app: term.sugx.func,
@@ -2318,7 +2342,25 @@ Fm.Term.unroll_nat(natx: Nat): Fm.Term
       Fm.Term.app(func, argm),
   }
 
-//// Desugars the named app syntax
+// Unrolls a character
+Fm.Term.unroll_chr(chrx: Char): Fm.Term
+  case chrx {
+    new: 
+      let term = Fm.Term.ref(Fm.Name.read("Word.from_bits"))
+      let term = Fm.Term.app(term, Fm.Term.nat(16))
+      let term = Fm.Term.app(term, Fm.Term.unroll_chr.bits(Word.to_bits<16>(chrx.value)))
+      let term = Fm.Term.app(Fm.Term.ref(Fm.Name.read("U16.new")), term)
+      term
+  }
+
+Fm.Term.unroll_chr.bits(bits: Bits): Fm.Term
+  case bits {
+    nil: Fm.Term.ref(Fm.Name.read("Bits.nil")),
+    0: Fm.Term.app(Fm.Term.ref(Fm.Name.read("Bits.0")), Fm.Term.unroll_chr.bits(bits.pred)),
+    1: Fm.Term.app(Fm.Term.ref(Fm.Name.read("Bits.1")), Fm.Term.unroll_chr.bits(bits.pred)),
+  }
+
+// Desugars the named app syntax
 Fm.Term.desugar_app(func: Fm.Term, args: Map(Fm.Term), type: Fm.Term, defs: Fm.Defs): Fm.Term
   case Fm.Term.reduce(type, defs) as type {
     all: case Fm.get<>(type.name, args) as got {
@@ -2901,6 +2943,39 @@ Fm.Parser.if: Parser(Fm.Term)
     return term;
   }
 
+// Parses a quoted char: `\n`
+Fm.Parser.char.escaped: Parser(Char)
+  let escs = [
+    {"\\b"  , '\b'},
+    {"\\f"  , '\f'},
+    {"\\n"  , '\n'},
+    {"\\r"  , '\r'},
+    {"\\t"  , '\t'},
+    {"\\v"  , '\v'},
+    {"\\\\" , '\\'},
+    {"\\\"" , '"'},
+    {"\\0"  , '\0'},
+    {"\\'"  , '\''},
+  ]
+  Parser.first_of<>(List.mapped<>(escs)<>((esc) case esc {
+    new: do Parser {
+      Parser.text(esc.fst);
+      return esc.snd;
+    }
+  }))
+
+// Parses a char literal: `'x'`
+Fm.Parser.char: Parser(Fm.Term)
+  do Parser {
+    Parser.spaces_text("'");
+    var chrx = Parser.first_of<>([
+      Fm.Parser.char.escaped,
+      Parser.one,
+    ]);
+    Parser.text("'");
+    return Fm.Term.chr(chrx);
+  }
+
 // Parses a with statement of a case
 Fm.Parser.case.with: Parser(Fm.Def)
   do Parser {
@@ -3067,6 +3142,7 @@ Fm.Parser.term: Parser(Fm.Term)
       Fm.Parser.parenthesis,
       Fm.Parser.let,
       Fm.Parser.if,
+      Fm.Parser.char,
       Fm.Parser.case,
       Fm.Parser.goal,
       Fm.Parser.hole,
@@ -3300,6 +3376,8 @@ Fm.Comp.compile(
       },
     nat:
       Fm.Comp.compile(Fm.Term.unroll_nat(term.natx), type, defs, ctx),
+    chr:
+      Fm.Comp.compile(Fm.Term.unroll_chr(term.chrx), type, defs, ctx),
     sug:
       Maybe.none<>,
     gol: do Maybe {
@@ -3466,3 +3544,5 @@ main: IO(Unit)
 
   //main: Nat
     //Nat.double(3)
+
+
