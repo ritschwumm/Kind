@@ -9,3 +9,477 @@ type Bool {
   true,
   false,
 }
+
+type Bit {
+  0,
+  1,
+}
+
+type Cmp {
+  ltn,
+  eql,
+  gtn,
+}
+
+type Bits {
+  nil,
+  0(pred: Bits),
+  1(pred: Bits),
+}
+
+type Nat {
+  zero,
+  succ(pred: Nat),
+}
+
+type Word ~ (size: Nat) {
+  nil                            ~ (size: Nat.zero),
+  0<size: Nat>(pred: Word(size)) ~ (size: Nat.succ(size)),
+  1<size: Nat>(pred: Word(size)) ~ (size: Nat.succ(size)),
+}
+
+type Maybe <A: Type> {
+  none,
+  some(value: A),
+}
+
+type Either <A: Type, B: Type> {
+  left(value: A),
+  right(value: B),
+}
+
+type Pair <A: Type, B: Type> {
+  new(fst: A, snd: B)
+}
+
+type List <A: Type> {
+  nil,
+  cons(head: A, tail: List(A)),
+}
+
+type Map <A: Type> {
+  new,
+  tie(val: Maybe(A), lft: Map(A), rgt: Map(A)),
+}
+
+Set: Type
+  Map(Unit)
+
+type U16 {
+  new(value: Word(16))
+}
+
+Char: Type
+  U16
+
+type String {
+  nil,
+  cons(head: Char, tail: String),
+}
+
+type Monad <M: (x: Type) Type> {
+  new(
+    bind: (A: Type, B: Type) (m: M(A)) (f: (x:A) M(B)) M(B),
+    pure: (A: Type) (x: A) M(A),
+  )
+}
+
+type Parser.Reply <V: Type> {
+  error(code: String, err: String),
+  value(code: String, val: V),
+}
+
+type IO <A: Type> {
+  end(value: A),
+  ask(query: String, param: String, then: (response: String) IO(A)),
+}
+
+// If we have an element of the empty type, then we can prove anything.
+Empty.absurd<P: Type>(x: Empty): P
+  case x {}
+
+Bool.not(a: Bool):  Bool
+  case a {
+    true: Bool.false,
+    false: Bool.true,
+  }
+
+Bool.and(a: Bool, b: Bool): Bool
+  case a {
+    true: b,
+    false: Bool.false,
+  }
+
+Bool.or(a: Bool, b: Bool): Bool
+  case a {
+    true: Bool.true,
+    false: b,
+  }
+
+// n == m
+Cmp.as_eql(cmp: Cmp): Bool
+  case cmp {
+    ltn: Bool.false,
+    eql: Bool.true,
+    gtn: Bool.false,
+  }
+
+// n >= m
+Cmp.as_gte(cmp: Cmp): Bool
+  case cmp {
+    ltn: Bool.false,
+    eql: Bool.true,
+    gtn: Bool.true,
+  }
+
+// n > m
+Cmp.as_gtn(cmp: Cmp): Bool
+  case cmp {
+    ltn: Bool.false,
+    eql: Bool.false,
+    gtn: Bool.true,
+  }
+
+// n <= m
+Cmp.as_lte(cmp: Cmp): Bool
+  case cmp {
+    ltn: Bool.true,
+    eql: Bool.true,
+    gtn: Bool.false,
+  }
+
+// n < m
+Cmp.as_ltn(cmp: Cmp): Bool
+  case cmp {
+    ltn: Bool.true,
+    eql: Bool.false,
+    gtn: Bool.false,
+  }
+
+Nat.pred(n: Nat): Nat
+  case n {
+    zero: Nat.zero,
+    succ: n.pred
+  }
+
+Nat.apply<A: Type>(n: Nat, f: (x:A) A, x: A): A
+  case n {
+    zero: x,
+    succ: Nat.apply<A>(n.pred, f, f(x)),
+  }
+
+//Nat.to_base(base: Nat, nat: Nat): List(Nat)
+  //Nat.to_base.go(base, nat, List.nil<Nat>)
+
+//Nat.to_base.go(base: Nat, nat: Nat, res: List(Nat)): List(Nat)
+  //case Nat.div_mod(nat, base) as div_mod {
+    //new: case div_mod.fst {
+      //zero: List.cons<_>(div_mod.snd, res),
+      //succ: Nat.to_base.go(base, div_mod.fst, List.cons<>(div_mod.snd, res))
+    //} 
+  //}
+
+Nat.to_bits(n: Nat): Bits
+  case n {
+    zero: Bits.nil,
+    succ: Bits.inc(Nat.to_bits(n.pred))
+  }
+
+Nat.add(n: Nat, m: Nat): Nat
+  case n {
+    zero: m,
+    succ: Nat.succ(Nat.add(n.pred, m)),
+  }
+
+Nat.sub(n: Nat, m: Nat): Nat
+  case n {
+    zero: 0,
+    succ: case m {
+      zero: n,
+      succ: Nat.sub(n.pred, m.pred)
+    }
+  }
+
+Nat.cmp(a: Nat, b: Nat): Cmp
+  case a {
+    zero: case b {
+      zero: Cmp.eql,
+      succ: Cmp.ltn,
+    },
+    succ: case b {
+      zero: Cmp.gtn,
+      succ: Nat.cmp(a.pred, b.pred),
+    },
+  }
+
+Nat.mul(n: Nat, m: Nat): Nat
+  case n {
+    zero: Nat.zero,
+    succ: Nat.add(m, Nat.mul(n.pred, m))
+  }
+
+Nat.sub_rem(n: Nat, m: Nat): Either(Nat, Nat)
+  case m {
+    zero: Either.left<_,_>(n),
+    succ: case n {
+      zero: Either.right<_,_>(Nat.succ(m.pred)),
+      succ: Nat.sub_rem(n.pred, m.pred),
+    }
+  }
+
+Nat.div_mod(n: Nat, m: Nat): Pair(Nat, Nat)
+  Nat.div_mod.go(n, m, Nat.zero)
+
+Nat.div_mod.go(n: Nat, m: Nat, d: Nat): Pair(Nat, Nat)
+  case Nat.sub_rem(n, m) as p {
+    left: Nat.div_mod.go(p.value, m, Nat.succ(d)),
+    right: Pair.new<_,_>(d, n),
+  }
+
+Nat.div(n: Nat, m: Nat): Nat
+  Pair.fst<_,_>(Nat.div_mod(n, m))
+
+Nat.mod(n: Nat, m: Nat): Nat
+  Pair.snd<_,_>(Nat.div_mod(n, m))
+
+Nat.double(n: Nat): Nat
+  case n {
+    zero: Nat.zero,
+    succ: Nat.succ(Nat.double(n.pred)),
+  }
+
+Bits.inc(a: Bits): Bits
+  case a {
+    nil: Bits.1(Bits.nil),
+    0: Bits.1(a.pred),
+    1: Bits.0(Bits.inc(a.pred)),
+  }
+
+Bits.reverse(a: Bits): Bits
+  Bits.reverse.tco(a, Bits.nil)
+
+Bits.reverse.tco(a: Bits, r: Bits): Bits
+  case a {
+    nil: r,
+    0: Bits.reverse.tco(a.pred, Bits.0(r)),
+    1: Bits.reverse.tco(a.pred, Bits.1(r))
+  }
+
+Pair.fst<A: Type, B: Type>(pair: Pair(A, B)): A
+  case pair {
+    new: pair.fst
+  }
+
+Pair.snd<A: Type, B: Type>(pair: Pair(A, B)): B
+  case pair {
+    new: pair.snd
+  }
+
+List.fold<A: Type>(list: List(A)): <P: Type> -> P -> (A -> P -> P) -> P
+  <P> (nil, cons)
+  case list {
+    nil : nil,
+    cons: cons(list.head, List.fold<A>(list.tail)<P>(nil, cons))
+  }
+
+List.for<A: Type>(xs: List(A))<B: Type>(b: B, f: A -> B -> B): B
+  case xs {
+    nil : b,
+    cons: List.for<A>(xs.tail)<B>(f(xs.head,b),f)
+  }
+
+List.map<A: Type, B: Type>(f: A -> B, as: List(A)): List(B)
+  case as {
+    nil: List.nil<_>,
+    cons: List.cons<_>(f(as.head), List.map<_,_>(f,as.tail)),
+  }
+
+List.reverse<A: Type>(xs: List(A)) : List(A)
+  List.reverse.go<_>(xs,List.nil<_>)
+
+List.reverse.go<A: Type>(xs: List(A), res: List(A)): List(A)
+  case xs {
+    nil: res,
+    cons: List.reverse.go<_>(xs.tail,List.cons<_>(xs.head,res))
+  }
+
+List.concat<A: Type>(as: List(A), bs: List(A)): List(A)
+  case as {
+    nil: bs,
+    cons: List.cons<_>(as.head, List.concat<_>(as.tail,bs))
+  }
+
+List.flatten<A: Type>(xs: List(List(A))): List(A)
+  case xs {
+    nil: List.nil<_>,
+    cons: List.concat<_>(xs.head, List.flatten<_>(xs.tail))
+  }
+
+List.length<A: Type>(xs: List(A)): Nat
+  List.length.go<_>(xs, 0)
+
+List.length.go<A: Type>(xs: List(A), n: Nat): Nat
+  case xs {
+    nil : n,
+    cons: List.length.go<A>(xs.tail, Nat.succ(n))
+  }
+
+List.eql<A: Type>(eql: A -> A -> Bool, a: List(A), b: List(A)): Bool
+  case a {
+    nil: case b {
+      nil: Bool.true,
+      cons: Bool.false,
+    },
+    cons: case b {
+      nil: Bool.false,
+      cons: Bool.and(eql(a.head, b.head), List.eql<A>(eql, a.tail, b.tail)),
+    },
+  }
+
+List.mapped<A: Type>(as: List(A))<B: Type>(f: A -> B): List(B)
+  case as {
+    nil: List.nil<_>,
+    cons: List.cons<_>(f(as.head),List.mapped<A>(as.tail)<B>(f))
+  }
+
+List.at<A: Type>(index: Nat, list: List(A)): Maybe(A)
+  case list {
+    nil: Maybe.none<_>,
+    cons: case index {
+      zero: Maybe.some<_>(list.head),
+      succ: List.at<_>(index.pred, list.tail),
+    }
+  }
+
+List.at_last<A: Type>(index: Nat, list: List(A)): Maybe(A)
+  List.at<A>(index, List.reverse<_>(list))
+
+Map.fold<A: Type>(map: Map(A)): <P: Type> -> P -> (Maybe(A) -> P -> P -> P) -> P
+  <P> (new, tie)
+  case map {
+    new: new,
+    tie: 
+      tie(
+        map.val,
+        Map.fold<A>(map.lft)<P>(new, tie),
+        Map.fold<A>(map.rgt)<P>(new, tie)),
+  }
+
+Map.get<A: Type>(bits: Bits, map: Map(A)): Maybe(A)
+  case bits {
+    nil: case map {
+      new: Maybe.none<_>,
+      tie: map.val
+    }, 
+    0: case map {
+      new: Maybe.none<_>,
+      tie: Map.get<_>(bits.pred, map.lft)
+    },
+    1: case map {
+      new: Maybe.none<_>,
+      tie: Map.get<_>(bits.pred, map.rgt)
+    }
+  }
+
+Map.set<A: Type>(bits: Bits, val: A, map: Map(A)): Map(A)
+  case bits {
+    nil: case map {
+      new: Map.tie<_>(Maybe.some<_>(val), Map.new<_>, Map.new<_>),
+      tie: Map.tie<_>(Maybe.some<_>(val), map.lft, map.rgt)
+    },
+    0: case map {
+      new: Map.tie<_>(Maybe.none<_>, Map.set<_>(bits.pred, val, Map.new<_>), Map.new<_>),
+      tie: Map.tie<_>(map.val, Map.set<_>(bits.pred, val, map.lft), map.rgt)
+    },
+    1: case map {
+      new: Map.tie<_>(Maybe.none<_>, Map.new<_>, Map.set<_>(bits.pred, val, Map.new<_>)),
+      tie: Map.tie<_>(map.val, map.lft, Map.set<_>(bits.pred, val, map.rgt))
+    }
+  }
+
+Map.delete<A: Type>(key: Bits, map: Map(A)) : Map(A)
+  case map {
+    new: Map.new<_>,
+    tie: case key {
+      nil: Map.tie<_>(Maybe.none<_>, map.lft, map.rgt),
+       0 : Map.delete<_>(key.pred, map.lft),
+       1 : Map.delete<_>(key.pred, map.rgt)
+    }
+  }
+
+Map.from_list<A: Type, B: Type>(f: A -> Bits, xs: List(Pair(A,B))): Map(B)
+  case xs {
+    nil : Map.new<_>,
+    cons: case xs.head as p {
+      new: Map.set<_>(f(p.fst), p.snd, Map.from_list<_,_>(f, xs.tail))
+    }
+  }
+
+Map.to_list.go<A: Type>(xs: Map(A), key: Bits, list: List(Pair(Bits,A))): List(Pair(Bits,A))
+  case xs {
+    new: list,
+    tie: 
+      let list0 = case xs.val {
+        none: list,
+        some: List.cons<_>(Pair.new<_,_>(Bits.reverse(key), xs.val.value), list),
+      };
+      let list1 = Map.to_list.go<_>(xs.lft, Bits.0(key), list0);
+      let list2 = Map.to_list.go<_>(xs.rgt, Bits.1(key), list1);
+      list2
+  }
+
+Set.new: Set
+  Map.new<Unit>
+
+Set.del<A: Type>(key: Bits, set: Set): Set
+  Map.delete<Unit>(key, set)
+
+Set.set(bits: Bits, set: Set): Set
+  Map.set<Unit>(bits, Unit.new, set)
+
+Set.has(bits: Bits, set: Set): Bool
+  case Map.get<Unit>(bits, set) {
+    none: Bool.false,
+    some: Bool.true,
+  }
+
+String.is_empty(str: String): Bool
+  case str {
+    nil: Bool.true,
+    cons: Bool.false,
+  }
+
+String.concat(as: String, bs: String): String
+  case as {
+    nil: bs,
+    cons: String.cons(as.head, String.concat(as.tail,bs)),
+  }
+
+//String.join.go(sep: String, list: List(String), fst: Bool): String
+  //case list {
+    //nil: "",
+    //cons: String.flatten([
+      //if fst then "" else sep,
+      //list.head, 
+      //String.join.go(sep, list.tail, Bool.false),
+    //]),
+  //}
+  
+//String.join(sep: String, list: List(String)): String
+  //String.join.go(sep, list, Bool.true)
+
+//String.flatten.go(xs: List(String), res: String): String
+  //case xs {
+    //nil: res,
+    //cons: String.flatten.go(xs.tail, String.concat(res, xs.head)),
+  //}
+
+//String.flatten(xs: List(String)): String
+  //String.flatten.go(xs, "")
+
+
+main: Nat
+  if Bool.false then
+    Nat.succ(Nat.zero)
+  else
+    Nat.zero
