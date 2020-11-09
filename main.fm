@@ -3237,8 +3237,8 @@ Fm.Parser.def: Parser(Fm.Def)
     var term = Fm.Parser.term;
     let type = Fm.Parser.make_forall(args, type);
     let term = Fm.Parser.make_lambda(List.mapped<>(args)<>((x) case x { new: x.name }),term);
-    let type = Fm.Term.bind([], (x) Bits.0(x), type);
-    let term = Fm.Term.bind([], (x) Bits.1(x), term);
+    let type = Fm.Term.bind([], (x) Bits.1(x), type);
+    let term = Fm.Term.bind([], (x) Bits.0(x), term);
     return Fm.Def.new(name, term, type, Bool.false);
   }
 
