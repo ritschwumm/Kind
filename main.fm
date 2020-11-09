@@ -33,9 +33,9 @@ type Nat {
 }
 
 type Word ~ (size: Nat) {
-  nil                            ~ (Nat.zero),
-  0<size: Nat>(pred: Word(size)) ~ (Nat.succ(size)),
-  1<size: Nat>(pred: Word(size)) ~ (Nat.succ(size)),
+  nil                            ~ (size: Nat.zero),
+  0<size: Nat>(pred: Word(size)) ~ (size: Nat.succ(size)),
+  1<size: Nat>(pred: Word(size)) ~ (size: Nat.succ(size)),
 }
 
 type Maybe <A: Type> {
@@ -910,6 +910,20 @@ String.concat(as: String, bs: String): String
   case as {
     nil: bs,
     cons: String.cons(as.head, String.concat(as.tail,bs)),
+  }
+
+String.eql(a: String, b: String): Bool
+  case a {
+    nil: case b {
+      nil: Bool.true,
+      cons: Bool.false,
+    },
+    cons: case b {
+      nil: Bool.false,
+      cons: Bool.and(
+        U16.eql(a.head, b.head),
+        String.eql(a.tail,b.tail)),
+    },
   }
 
 String.join.go(sep: String, list: List(String), fst: Bool): String
@@ -1836,64 +1850,64 @@ Fm.Term.expand(dref: List(Bits), term: Fm.Term, defs: Fm.Defs): Fm.Term
 
 // Helper function
 Fm.Term.serialize.go(term: Fm.Term, depth: Nat, init: Nat, x: Bits): Bits
-case term {
-  ref:
-    let name = Bits.concat(Fm.Name.to_bits(term.name))
-    Bits.0(Bits.0(Bits.0(name(x)))),
-  var:
-    if Nat.gte(term.indx, init) then
-      let name = Bits.concat(Nat.to_bits(Nat.pred(Nat.sub(depth,term.indx))))
-      Bits.0(Bits.0(Bits.1(name(x))))
-    else
-      let name = Bits.concat(Nat.to_bits(term.indx))
-      Bits.0(Bits.1(Bits.0(name(x)))),
-  typ:
-    Bits.0(Bits.1(Bits.1(x))),
-  all:
-    let self = Bits.concat(Fm.Name.to_bits(term.self))
-    let xtyp = Fm.Term.serialize.go(term.xtyp, depth, init)
-    let body = Fm.Term.serialize.go(
-      term.body(
-        Fm.Term.var(term.self, depth),
-        Fm.Term.var(term.name, Nat.succ(depth))),
-      Nat.succ(Nat.succ(depth)),
-      init)
-    Bits.1(Bits.0(Bits.0(self(xtyp(body(x)))))),
-  lam:
-    let body = Fm.Term.serialize.go(
-      term.body(Fm.Term.var(term.name, depth)),
-      Nat.succ(depth),
-      init)
-    Bits.1(Bits.0(Bits.1(body(x)))),
-  app:
-    let func = Fm.Term.serialize.go(term.func, depth, init)
-    let argm = Fm.Term.serialize.go(term.argm, depth, init)
-    Bits.1(Bits.1(Bits.0(func(argm(x))))),
-  let:
-    let expr = Fm.Term.serialize.go(term.expr, depth, init)
-    let body = Fm.Term.serialize.go(
-      term.body(Fm.Term.var(term.name, depth)),
-      Nat.succ(depth),
-      init)
-    Bits.1(Bits.1(Bits.1(expr(body(x))))),
-  def:
-    Fm.Term.serialize.go(term.body(term.expr), depth, init, x),
-  ann:
-    Fm.Term.serialize.go(term.term, depth, init, x),
-  gol:
-    let name = Bits.concat(Fm.Name.to_bits(term.name))
-    Bits.0(Bits.0(Bits.0(name(x)))),
-  hol:
-    x,
-  nat:
-    x,
-  chr:
-    x,
-  str:
-    x,
-  sug:
-    x,
-}
+  case term {
+    ref:
+      let name = Bits.concat(Fm.Name.to_bits(term.name))
+      Bits.0(Bits.0(Bits.0(name(x)))),
+    var:
+      if Nat.gte(term.indx, init) then
+        let name = Bits.concat(Nat.to_bits(Nat.pred(Nat.sub(depth,term.indx))))
+        Bits.0(Bits.0(Bits.1(name(x))))
+      else
+        let name = Bits.concat(Nat.to_bits(term.indx))
+        Bits.0(Bits.1(Bits.0(name(x)))),
+    typ:
+      Bits.0(Bits.1(Bits.1(x))),
+    all:
+      let self = Bits.concat(Fm.Name.to_bits(term.self))
+      let xtyp = Fm.Term.serialize.go(term.xtyp, depth, init)
+      let body = Fm.Term.serialize.go(
+        term.body(
+          Fm.Term.var(term.self, depth),
+          Fm.Term.var(term.name, Nat.succ(depth))),
+        Nat.succ(Nat.succ(depth)),
+        init)
+      Bits.1(Bits.0(Bits.0(self(xtyp(body(x)))))),
+    lam:
+      let body = Fm.Term.serialize.go(
+        term.body(Fm.Term.var(term.name, depth)),
+        Nat.succ(depth),
+        init)
+      Bits.1(Bits.0(Bits.1(body(x)))),
+    app:
+      let func = Fm.Term.serialize.go(term.func, depth, init)
+      let argm = Fm.Term.serialize.go(term.argm, depth, init)
+      Bits.1(Bits.1(Bits.0(func(argm(x))))),
+    let:
+      let expr = Fm.Term.serialize.go(term.expr, depth, init)
+      let body = Fm.Term.serialize.go(
+        term.body(Fm.Term.var(term.name, depth)),
+        Nat.succ(depth),
+        init)
+      Bits.1(Bits.1(Bits.1(expr(body(x))))),
+    def:
+      Fm.Term.serialize.go(term.body(term.expr), depth, init, x),
+    ann:
+      Fm.Term.serialize.go(term.term, depth, init, x),
+    gol:
+      let name = Bits.concat(Fm.Name.to_bits(term.name))
+      Bits.0(Bits.0(Bits.0(name(x)))),
+    hol:
+      x,
+    nat:
+      x,
+    chr:
+      x,
+    str:
+      x,
+    sug:
+      x,
+  }
 
 // SERIALIZE: Serializes a term to a representative bitstring
 Fm.Term.serialize(term: Fm.Term, depth: Nat): Bits
@@ -2265,6 +2279,7 @@ Fm.synth.fix(
   }
 
 Fm.synth.one(name: Fm.Name, term: Fm.Term, type: Fm.Term, defs: Fm.Defs): Fm.Def
+  use skip = Debug.log<>(String.flatten(["synth ", name]))
   let checked = do Fm.Check {
     var chk_type = Fm.Term.check(type, Maybe.some<>(Fm.Term.typ), defs, [], Fm.MPath.1(Fm.MPath.nil));
     var chk_term = Fm.Term.check(term, Maybe.some<>(type), defs, [], Fm.MPath.0(Fm.MPath.nil));
@@ -2287,7 +2302,6 @@ Fm.synth.one(name: Fm.Name, term: Fm.Term, type: Fm.Term, defs: Fm.Defs): Fm.Def
         }
     }
   }
-
 
 // SYNTH: Checks the type of a core term, fixing repairable errors
 Fm.synth(defs: Fm.Defs): Fm.Defs
@@ -2334,6 +2348,7 @@ Fm.report(defs: Fm.Defs): String
           let string_1 = for error in check.errors:
             String.flatten([
               string_1,
+              "\nOn '", name_str, "':",
               "\n", Fm.Error.show(error, defs), "\n",
             ])
           {string_0, string_1},
@@ -2807,7 +2822,7 @@ Fm.Name.to_bits(name: Fm.Name): Bits
       Bits.concat(Bits.reverse(bts), Fm.Name.to_bits(name.tail)),
   }
 
-//// Converts a bits to a name
+// Converts a bits to a name
 Fm.Name.from_bits(bits: Bits): Fm.Name
   let list = Bits.chunks_of(6, bits)
   let name = List.fold<>(list)<>(String.nil, (bts, name)
@@ -2993,16 +3008,16 @@ Fm.Parser.if: Parser(Fm.Term)
 // Parses a single char: @\n@
 Fm.Parser.char.single: Parser(Char)
   let escs = [
-    {"\\b" , '\b'},
-    {"\\f" , '\f'},
-    {"\\n" , '\n'},
-    {"\\r" , '\r'},
-    {"\\t" , '\t'},
-    {"\\v" , '\v'},
-    {"\\\\", '\\'},
-    {"\\\"", '"'},
-    {"\\0" , '\0'},
-    {"\\'" , '\''},
+    {String.cons('\\', String.cons('b', String.nil)), '\b'},
+    {String.cons('\\', String.cons('f', String.nil)), '\f'},
+    {String.cons('\\', String.cons('n', String.nil)), '\n'},
+    {String.cons('\\', String.cons('r', String.nil)), '\r'},
+    {String.cons('\\', String.cons('t', String.nil)), '\t'},
+    {String.cons('\\', String.cons('v', String.nil)), '\v'},
+    {String.cons('\\', String.cons('\\', String.nil)), '\\'},
+    {String.cons('\\', String.cons('"', String.nil)), '"'},
+    {String.cons('\\', String.cons('0', String.nil)), '\0'},
+    {String.cons('\\', String.cons('\'', String.nil)), '\''},
   ]
   Parser.first_of<>([
     Parser.first_of<>(List.mapped<>(escs)<>((esc) case esc {
@@ -3122,7 +3137,7 @@ Fm.Parser.do.statements(monad_name: Fm.Name): Parser(Fm.Term)
   Parser.first_of<>([
     // Binding call: @ask x = expr; rest@
     do Parser {
-      Parser.spaces_text("ask ");
+      Parser.spaces_text("var ");
       Parser.spaces;
       var name = Fm.Parser.name1;
       Parser.spaces_text("=");
@@ -3473,7 +3488,6 @@ Fm.Parser.file.go(defs: Fm.Defs): Parser(Fm.Defs)
         case adt {
           some: case adt.value {
             new:
-              open adt.value
               let term = Fm.Datatype.build_term(adt.value)
               let term = Fm.Term.bind([], (x) Bits.1(x), term)
               let type = Fm.Datatype.build_type(adt.value)
