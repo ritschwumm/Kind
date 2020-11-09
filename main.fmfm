@@ -191,12 +191,6 @@ Nat.from_base.go(b: Nat, ds: List(Nat), p: Nat, res: Nat) : Nat
     cons: Nat.from_base.go(b,ds.tail,Nat.mul(b,p), Nat.add(Nat.mul(ds.head,p),res))
   }
 
-Nat.to_bits(n: Nat): Bits
-  case n {
-    zero: Bits.nil,
-    succ: Bits.inc(Nat.to_bits(n.pred))
-  }
-
 Nat.to_string_base(base: Nat, nat: Nat): String
   List.fold<_>(Nat.to_base(base, nat))<_>(
     String.nil,
@@ -444,6 +438,68 @@ Word.zero(size: Nat): Word(size)
     succ: Word.0<size.pred>(Word.zero(size.pred))
   } : Word(size.self)
 
+Word.cmp.go<size: Nat>(a: Word(size), b: Word(size), c: Cmp): Cmp
+  case a with b : Word(a.size) = b {
+    nil: c,
+    0 : case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
+      nil: c,
+      0  : Word.cmp.go<b.size>(a.pred, b.pred, c),
+      1  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.ltn)
+    },
+    1: case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
+      nil: c,
+      0  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.gtn),
+      1  : Word.cmp.go<b.size>(a.pred, b.pred, c)
+    }
+  }
+
+// Right fold a word
+Word.fold<P: Nat -> Type, m: Nat>(
+  nil  : P(Nat.zero),
+  w0   : <n: Nat> -> P(n) -> P(Nat.succ(n)),
+  w1   : <n: Nat> -> P(n) -> P(Nat.succ(n)),
+  word : Word(m)
+) : P(m)
+  case word {
+    nil: nil,
+     0 : w0<word.size>(Word.fold<P,word.size>(nil, w0, w1, word.pred)),
+     1 : w1<word.size>(Word.fold<P,word.size>(nil, w0, w1, word.pred))
+  } : P(word.size)
+
+// Left fold a word
+Word.foldl<P: Nat -> Type, m: Nat>(
+  nil  : P(Nat.zero),
+  w0   : <n: Nat> -> P(n) -> P(Nat.succ(n)),
+  w1   : <n: Nat> -> P(n) -> P(Nat.succ(n)),
+  word : Word(m),
+) : P(m)
+  case word {
+    nil:
+      nil,
+    0: 
+      def P   = (n) P(Nat.succ(n));
+      def nil = w0<Nat.zero>(nil);
+      def w0  = <x> w0<Nat.succ(x)>;
+      def w1  = <x> w1<Nat.succ(x)>;
+      Word.foldl<P, word.size>(nil, w0, w1, word.pred),
+    1: 
+      def P   = (n) P(Nat.succ(n));
+      def nil = w1<Nat.zero>(nil);
+      def w0  = <x> w0<Nat.succ(x)>;
+      def w1  = <x> w1<Nat.succ(x)>;
+      Word.foldl<P, word.size>(nil, w0, w1, word.pred),
+  } : P(word.size)
+
+Word.trim<size: Nat>(new_size: Nat, word: Word(size)): Word(new_size)
+  case new_size {
+    zero: Word.nil,
+    succ: case word {
+      nil: Word.0<new_size.pred>(Word.trim<Nat.zero>(new_size.pred, Word.nil)),
+       0 : Word.0<new_size.pred>(Word.trim<word.size>(new_size.pred, word.pred)),
+       1 : Word.1<new_size.pred>(Word.trim<word.size>(new_size.pred, word.pred))
+    }
+  } : Word(new_size.self)
+
 Word.adder<size: Nat>(a: Word(size), b: Word(size), c: Bool): Word(size)
   case a with b: Word(a.size) = b {
     nil: Word.nil,
@@ -471,20 +527,32 @@ Word.adder<size: Nat>(a: Word(size), b: Word(size), c: Bool): Word(size)
     } : Word(b.size)
   } : Word(a.size)
 
-Word.cmp.go<size: Nat>(a: Word(size), b: Word(size), c: Cmp): Cmp
-  case a with b : Word(a.size) = b {
-    nil: c,
-    0 : case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
-      nil: c,
-      0  : Word.cmp.go<b.size>(a.pred, b.pred, c),
-      1  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.ltn)
-    },
-    1: case b with a.pred : Word(Nat.pred(b.size)) = a.pred {
-      nil: c,
-      0  : Word.cmp.go<b.size>(a.pred, b.pred, Cmp.gtn),
-      1  : Word.cmp.go<b.size>(a.pred, b.pred, c)
-    }
-  }
+Word.subber<size: Nat>(a: Word(size), b: Word(size), c: Bool): Word(size)
+  case a with b: Word(a.size) = b {
+    nil: Word.nil,
+    0 : case b with a.pred: Word(Nat.pred(b.size)) = a.pred {
+      nil: Word.nil,
+      0: case c {
+        true : Word.1<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.0<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.false)),
+      },
+      1: case c {
+        true:  Word.0<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.1<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.true)),
+      }
+    } : Word(b.size),
+    1: case b with a.pred: Word(Nat.pred(b.size)) = a.pred {
+      nil: Word.nil,
+      0: case c {
+        true : Word.0<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.false)),
+        false: Word.1<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.false)),
+      },
+      1: case c {
+        true : Word.1<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.true)),
+        false: Word.0<b.size>(Word.subber<b.size>(a.pred, b.pred, Bool.false)),
+      }
+    } : Word(b.size)
+  } : Word(a.size)
 
 // ++a
 Word.inc<size: Nat>(word: Word(size)): Word(size)
@@ -494,12 +562,151 @@ Word.inc<size: Nat>(word: Word(size)): Word(size)
      1 : Word.0<word.size>(Word.inc<word.size>(word.pred))
   } : Word(word.size)
 
+// a + b
+Word.add<size: Nat>(a: Word(size), b: Word(size)): Word(size)
+  Word.adder<size>(a)(b)(Bool.false)
+
+// a - b
+Word.sub<size: Nat>(a: Word(size), b: Word(size)): Word(size)
+  Word.subber<size>(a, b, Bool.false)
+
+// a ? b
+Word.cmp<size: Nat>(a: Word(size), b: Word(size)): Cmp
+  Word.cmp.go<size>(a, b, Cmp.eql)
+
+// a <= b
+Word.lte<size:Nat>(a: Word(size), b: Word(size)): Bool
+  Cmp.as_lte(Word.cmp<size>(a, b))
+
+// a < b
+Word.ltn<size:Nat>(a: Word(size), b: Word(size)): Bool
+  Cmp.as_ltn(Word.cmp<size>(a, b))
+
+// a == b
+Word.eql<size:Nat>(a: Word(size), b: Word(size)): Bool
+  Cmp.as_eql(Word.cmp<size>(a, b))
+
+// a >= b
+Word.gte<size:Nat>(a: Word(size), b: Word(size)): Bool
+  Cmp.as_gte(Word.cmp<size>(a, b))
+
+// a > b
+Word.gtn<size:Nat>(a: Word(size), b: Word(size)): Bool
+  Cmp.as_gtn(Word.cmp<size>(a, b))
+
+// a <= b <= c
+Word.btw<size:Nat>(a: Word(size), b: Word(size), c: Word(size)): Bool
+  Bool.and(Word.lte<size>(a, b), Word.lte<size>(b, c))
+
+U16.to_word(a: U16): Word(16)
+  case a {
+    new: a.value
+  }
+
+// 0
 U16.zero: U16
   U16.new(Word.zero(16))
 
+// ++a
 U16.inc(a: U16): U16
   case a {
     new: U16.new(Word.inc<_>(a.value))
+  }
+
+// a + b
+U16.add(a: U16, b: U16): U16
+  case a {
+    new: case b {
+      new: U16.new(Word.add<_>(a.value, b.value))
+    }
+  }
+
+// a - b
+U16.sub(a: U16, b: U16): U16
+  case a {
+    new: case b {
+      new: U16.new(Word.sub<_>(a.value, b.value))  
+    }
+  }
+
+// a == b
+U16.eql(a: U16, b: U16): Bool
+  case a {
+    new: case b {
+      new: Word.eql<_>(a.value, b.value)
+    }
+  }
+
+// a >= b
+U16.gte(a: U16, b: U16): Bool
+  case a {
+    new: case b {
+      new: Word.gte<_>(a.value, b.value)
+    }
+  }
+
+// a > b
+U16.gtn(a: U16, b: U16): Bool
+  case a {
+    new: case b {
+      new: Word.gtn<_>(a.value, b.value)
+    }
+  }
+
+// a <= b
+U16.lte(a: U16, b: U16): Bool
+  case a {
+    new: case b {
+      new: Word.lte<_>(a.value, b.value)
+    }
+  }
+
+// a < b
+U16.ltn(a: U16, b: U16): Bool
+  case a {
+    new: case b {
+      new: Word.ltn<_>(a.value, b.value)
+    }
+  }
+
+// a <= b <= c
+U16.btw(a: U16, b: U16, c: U16): Bool
+  Bool.and(U16.lte(a, b), U16.lte(b, c))
+
+Maybe.mapped<A: Type>(m: Maybe(A))<B: Type>(f: A -> B): Maybe(B)
+  case m {
+    none: Maybe.none<B>,
+    some: Maybe.some<B>(f(m.value)),
+  }
+
+Maybe.pure<A: Type>(a: A): Maybe(A)
+  Maybe.some<A>(a)
+
+Maybe.bind<A: Type, B: Type>(m: Maybe(A), f: A -> Maybe(B)): Maybe(B)
+  case m {
+    none: Maybe.none<B>,
+    some: f(m.value),
+  }
+
+Maybe.monad: Monad(Maybe)
+  Monad.new<Maybe>(Maybe.bind, Maybe.some)
+
+Maybe.default<A: Type>(a: A, m: Maybe(A)): A
+  case m {
+    none: a,
+    some: m.value,
+  }
+
+Maybe.to_bool<A: Type>(m: Maybe(A)): Bool
+  case m {
+    none: Bool.false,
+    some: Bool.true,
+  }
+
+Maybe.or<A: Type>(a: Maybe(A), b: Maybe(A)): Maybe(A)
+  case a {
+    none: b,
+    some: Maybe.some<_>(a.value),
   }
 
 Pair.fst<A: Type, B: Type>(pair: Pair(A, B)): A
@@ -552,9 +759,11 @@ List.flatten<A: Type>(xs: List(List(A))): List(A)
     cons: List.concat<_>(xs.head, List.flatten<_>(xs.tail))
   }
 
+// Computes the length of the list.
 List.length<A: Type>(xs: List(A)): Nat
   List.length.go<_>(xs, 0)
 
+// Computes the length of the list.
 List.length.go<A: Type>(xs: List(A), n: Nat): Nat
   case xs {
     nil : n,
@@ -606,15 +815,15 @@ Map.get<A: Type>(bits: Bits, map: Map(A)): Maybe(A)
   case bits {
     nil: case map {
       new: Maybe.none<_>,
-      tie: map.val
+      tie: map.val,
     }, 
     0: case map {
       new: Maybe.none<_>,
-      tie: Map.get<_>(bits.pred, map.lft)
+      tie: Map.get<_>(bits.pred, map.lft),
     },
     1: case map {
       new: Maybe.none<_>,
-      tie: Map.get<_>(bits.pred, map.rgt)
+      tie: Map.get<_>(bits.pred, map.rgt),
     }
   }
 
@@ -634,7 +843,7 @@ Map.set<A: Type>(bits: Bits, val: A, map: Map(A)): Map(A)
     }
   }
 
-Map.delete<A: Type>(key: Bits, map: Map(A)) : Map(A)
+Map.delete<A: Type>(key: Bits, map: Map(A)): Map(A)
   case map {
     new: Map.new<_>,
     tie: case key {
@@ -652,9 +861,13 @@ Map.from_list<A: Type, B: Type>(f: A -> Bits, xs: List(Pair(A,B))): Map(B)
     }
   }
 
+Map.to_list<A: Type>(xs: Map(A)): List(Pair(Bits,A))
+  List.reverse<_>(Map.to_list.go<_>(xs, Bits.nil, List.nil<_>))
+
 Map.to_list.go<A: Type>(xs: Map(A), key: Bits, list: List(Pair(Bits,A))): List(Pair(Bits,A))
   case xs {
-    new: list,
+    new:
+      list,
     tie: 
       let list0 = case xs.val {
         none: list,
@@ -692,32 +905,1098 @@ String.concat(as: String, bs: String): String
     cons: String.cons(as.head, String.concat(as.tail,bs)),
   }
 
-//String.join.go(sep: String, list: List(String), fst: Bool): String
-  //case list {
-    //nil: "",
-    //cons: String.flatten([
-      //if fst then "" else sep,
-      //list.head, 
-      //String.join.go(sep, list.tail, Bool.false),
-    //]),
-  //}
+Char.new(
+  b0: Bit, b1: Bit, b2: Bit, b3: Bit,
+  b4: Bit, b5: Bit, b6: Bit, b7: Bit,
+  b8: Bit, b9: Bit, bA: Bit, bB: Bit,
+  bC: Bit, bD: Bit, bE: Bit, bF: Bit,
+): U16
+  let kF = b0<(x) Word( 0) -> Word( 1)>(Word.0<_>, Word.1<_>);
+  let kE = b1<(x) Word( 1) -> Word( 2)>(Word.0<_>, Word.1<_>);
+  let kD = b2<(x) Word( 2) -> Word( 3)>(Word.0<_>, Word.1<_>);
+  let kC = b3<(x) Word( 3) -> Word( 4)>(Word.0<_>, Word.1<_>);
+  let kB = b4<(x) Word( 4) -> Word( 5)>(Word.0<_>, Word.1<_>);
+  let kA = b5<(x) Word( 5) -> Word( 6)>(Word.0<_>, Word.1<_>);
+  let k9 = b6<(x) Word( 6) -> Word( 7)>(Word.0<_>, Word.1<_>);
+  let k8 = b7<(x) Word( 7) -> Word( 8)>(Word.0<_>, Word.1<_>);
+  let k7 = b8<(x) Word( 8) -> Word( 9)>(Word.0<_>, Word.1<_>);
+  let k6 = b9<(x) Word( 9) -> Word(10)>(Word.0<_>, Word.1<_>);
+  let k5 = bA<(x) Word(10) -> Word(11)>(Word.0<_>, Word.1<_>);
+  let k4 = bB<(x) Word(11) -> Word(12)>(Word.0<_>, Word.1<_>);
+  let k3 = bC<(x) Word(12) -> Word(13)>(Word.0<_>, Word.1<_>);
+  let k2 = bD<(x) Word(13) -> Word(14)>(Word.0<_>, Word.1<_>);
+  let k1 = bE<(x) Word(14) -> Word(15)>(Word.0<_>, Word.1<_>);
+  let k0 = bF<(x) Word(15) -> Word(16)>(Word.0<_>, Word.1<_>);
+  let kx = Word.nil;
+  U16.new(k0(k1(k2(k3(k4(k5(k6(k7(k8(k9(kA(kB(kC(kD(kE(kF(kx)))))))))))))))))
+
+String.is_empty(str: String): Bool
+  case str {
+    nil: Bool.true,
+    cons: Bool.false,
+  }
+
+String.concat(as: String, bs: String): String
+  case as {
+    nil: bs,
+    cons: String.cons(as.head, String.concat(as.tail,bs)),
+  }
+
+String.join.go(sep: String, list: List(String), fst: Bool): String
+  case list {
+    nil: "",
+    cons: String.flatten([
+      if fst then "" else sep,
+      list.head, 
+      String.join.go(sep, list.tail, Bool.false),
+    ]),
+  }
   
-//String.join(sep: String, list: List(String)): String
-  //String.join.go(sep, list, Bool.true)
+String.join(sep: String, list: List(String)): String
+  String.join.go(sep, list, Bool.true)
 
-//String.flatten.go(xs: List(String), res: String): String
-  //case xs {
-    //nil: res,
-    //cons: String.flatten.go(xs.tail, String.concat(res, xs.head)),
+String.flatten.go(xs: List(String), res: String): String
+  case xs {
+    nil: res,
+    cons: String.flatten.go(xs.tail, String.concat(res, xs.head)),
+  }
+
+String.flatten(xs: List(String)): String
+  String.flatten.go(xs, "")
+
+Monad.pure<M: Type -> Type>(m: Monad(M)): <A: Type> -> A -> M(A)
+  case m {
+    new: m.pure
+  }
+
+Monad.bind<M: Type -> Type>(m: Monad(M)): <A: Type, B: Type> -> M(A) -> (A -> M(B)) -> M(B)
+  case m {
+    new: m.bind
+  }
+
+IO.bind<A: Type, B: Type>(a: IO(A), f: A -> IO(B)): IO(B)
+  case a {
+    end: f(a.value),
+    ask: IO.ask<B>(a.query, a.param, (x) IO.bind<A,B>(a.then(x), f)),
+  }
+
+IO.get_line: IO(String)
+  IO.ask<String>("get_line", "", (line)
+  IO.end<String>(line))
+
+IO.monad: Monad(IO)
+  Monad.new<IO>(IO.bind, IO.end)
+
+IO.print(text: String): IO(Unit)
+  IO.ask<Unit>("print", text, (skip)
+  IO.end<Unit>(Unit.new))
+
+IO.prompt(text: String): IO(String)
+  IO.ask<String>("print", text, (skip)
+  IO.ask<String>("get_line", "", (line)
+  IO.end<String>(line)))
+
+// A parser is a function that receives a string and returns a reply
+Parser(V: Type): Type
+  String -> Parser.Reply(V)
+
+// Parser monadic binder
+Parser.bind<A: Type, B: Type>(parse: Parser(A), next: A -> Parser(B)): Parser(B)
+  (code) case parse(code) as reply {
+    error: Parser.Reply.error<B>(reply.code, reply.err),
+    value: next(reply.val, reply.code),
+  }
+
+// Parser monadic injection
+Parser.pure<V: Type>(value: V): Parser(V)
+  (code) Parser.Reply.value<V>(code, value)
+
+// Perser monad
+Parser.monad: Monad(Parser)
+  Monad.new<Parser>(Parser.bind, Parser.pure)
+
+// Consumes a specific text, returns the remaining code
+Parser.text.go(text: String): Parser(Unit)
+  (code) case text {
+    nil:
+      Parser.Reply.value<Unit>(code, Unit.new),
+    cons: case code {
+      nil:
+        let error = String.flatten(["Expected '", text, "', found end of file."]);
+        Parser.Reply.error<Unit>(code, error)
+      cons:
+        if U16.eql(text.head, code.head) then
+          Parser.text(text.tail, code.tail)
+        else
+          let error = String.flatten(["Expected '", text, "', found '", String.cons(code.head, String.nil), "'."]);
+          Parser.Reply.error<Unit>(code, error)
+    }
+  }
+
+Parser.text(text: String): Parser(Unit)
+  (code) case Parser.text.go(text, code) as reply {
+    error: Parser.Reply.error<Unit>(code, reply.err),
+    value: Parser.Reply.value<Unit>(reply.code, reply.val),
+  }
+
+Parser.one: Parser(Char)
+  (code) case code {
+    nil: Parser.Reply.error<Char>(code, "Unexpected end of file."),
+    cons: Parser.Reply.value<Char>(code.tail, code.head),
+  }
+  
+Parser.if_not<A: Type>(a: Parser(Unit), b: Parser(A)): Parser(A)
+  (code) case a(code) {
+    error: b(code),
+    value: Parser.Reply.error<A>(code, "Prevented."),
+  }
+
+// Repeats a parse until it fails, returns a list of results
+Parser.many<V: Type>(parser: Parser(V)): Parser(List(V))
+  Parser.many.go<V>(parser, (x) x)
+
+Parser.many.go<V: Type>(parse: Parser(V), values: List(V) -> List(V), code: String): Parser.Reply(List(V))
+  case parse(code) as reply {
+    error: Parser.Reply.value<List(V)>(code, values([])),
+    value: Parser.many.go<V>(parse, (xs) values(List.cons<_>(reply.val, xs)), reply.code),
+  }
+
+// Same as Parser.many, but parses at least one instance
+Parser.many1<V: Type>(parser: Parser(V)): Parser(List(V))
+  do Parser {
+    ask head = parser;
+    ask tail = Parser.many<V>(parser);
+    return List.cons<V>(head, tail);
+  }
+
+Parser.until<A: Type>(cond: Parser(Unit), parser: Parser(A)): Parser(List(A))
+  Parser.many<_>(Parser.if_not<_>(cond, parser))
+
+// Parses an optional
+Parser.maybe<V: Type>(parse: Parser(V)): Parser(Maybe(V))
+  (code) case parse(code) as reply {
+    error: Parser.Reply.value<Maybe(V)>(code, Maybe.none<V>),
+    value: Parser.Reply.value<Maybe(V)>(reply.code, Maybe.some<V>(reply.val)),
+  }
+
+// Parses the first in a list
+Parser.first_of<A: Type>(pars: List(Parser(A))): Parser(A)
+  (code) case pars {
+    nil: Parser.Reply.error<_>(code, "No parse."),
+    cons:
+      let parsed = pars.head(code);
+      case parsed {
+        error: Parser.first_of<_>(pars.tail, code),
+        value: Parser.Reply.value<_>(parsed.code, parsed.val),
+      }
+  }
+
+// Skips whitespaces
+Parser.spaces: Parser(List(Unit))
+  Parser.many<_>(Parser.first_of<_>([
+    Parser.text(" "),
+    Parser.text("\n"),
+  ]))
+
+// Parses spaces then a text
+Parser.spaces_text(text: String): Parser(Unit)
+  do Parser {
+    Parser.spaces;
+    Parser.text(text);
+  }
+
+// Parses a character
+Parser.char_if(fun: Char -> Bool): Parser(Char)
+  (code) case code {
+    nil: Parser.Reply.error<_>(code, "No parse."),
+    cons:
+      if fun(code.head) then
+        Parser.Reply.value<_>(code.tail, code.head)
+      else
+        Parser.Reply.error<_>(code, "No parse."),
+  }
+
+// Parses a digit: [0123456789]
+Parser.digit: Parser(Nat)
+  (code) case code {
+    nil:
+      Parser.Reply.error<_>(code, "No parse."),
+    cons:
+      if      U16.eql(code.head, '0') then Parser.Reply.value<_>(code.tail, 0)
+      else if U16.eql(code.head, '1') then Parser.Reply.value<_>(code.tail, 1)
+      else if U16.eql(code.head, '2') then Parser.Reply.value<_>(code.tail, 2)
+      else if U16.eql(code.head, '3') then Parser.Reply.value<_>(code.tail, 3)
+      else if U16.eql(code.head, '4') then Parser.Reply.value<_>(code.tail, 4)
+      else if U16.eql(code.head, '5') then Parser.Reply.value<_>(code.tail, 5)
+      else if U16.eql(code.head, '6') then Parser.Reply.value<_>(code.tail, 6)
+      else if U16.eql(code.head, '7') then Parser.Reply.value<_>(code.tail, 7)
+      else if U16.eql(code.head, '8') then Parser.Reply.value<_>(code.tail, 8)
+      else if U16.eql(code.head, '9') then Parser.Reply.value<_>(code.tail, 9)
+      else Parser.Reply.error<_>(code, "No parse."),
+  }
+
+// Parses a natural number: 123
+Parser.nat: Parser(Nat)
+  do Parser {
+    ask digits = Parser.many1<Nat>(Parser.digit);
+    return Nat.from_base(10, digits);
+  }
+
+// Gets the current code
+Parser.get_code: Parser(String)
+  (code) Parser.Reply.value<_>(code, code)
+
+// Gets the current code
+Parser.log_code: Parser(Unit)
+  (code) Debug.log<_>(code, (x) Parser.Reply.value<_>(code, Unit.new))
+
+// Parses something
+Parser.log(str: String): Parser(Unit)
+  (code) Debug.log<_>(str, (x) Parser.Reply.value<_>(code, Unit.new))
+
+// Logs to the console
+Debug.log<A: Type>(s: String, x: Unit -> A): A
+  x(Unit.new)
+
+// Types
+// =====
+
+// A Formality Letter is a character in: [A-Za-z0-9._]
+Fm.Letter: Type
+  Char
+
+// A Formality Name is a string of letters
+Fm.Name: Type
+  String
+
+// A Formality term (high-order)
+type Fm.Term {
+  // A variable bound by another constructor
+  var(
+    name: Fm.Name, // the variable name, used for pretty printing
+    indx: Nat, // the variable bruijn level, used for equality and binding
+  ),
+  // A reference to a top-level definition
+  ref(
+    name: Fm.Name, // the reference name
+  ),
+  // The type of types
+  typ,
+  // The self-dependent function type (self-Pi)
+  all(
+    eras: Bool, // if it is erased at runtime
+    self: Fm.Name, // the term name
+    name: Fm.Name, // the input name
+    xtyp: Fm.Term, // the input type
+    body: Fm.Term -> Fm.Term -> Fm.Term, // the returned type
+  ),
+  // An anonymous function (lambda)
+  lam(
+    name: Fm.Name, // the input name
+    body: Fm.Term -> Fm.Term, // the returned body
+  ),
+  // A function application
+  app(
+    func: Fm.Term, // the function
+    argm: Fm.Term, // the argument
+  ),
+  // A local definition
+  let(
+    name: Fm.Name, // the expression name
+    expr: Fm.Term, // the expression value
+    body: Fm.Term -> Fm.Term, // the body where name=value
+  ),
+  // A local alias
+  def(
+    name: Fm.Name, // the expression name
+    expr: Fm.Term, // the expression value
+    body: Fm.Term -> Fm.Term, // the body where name=value
+  ),
+  // An inline annotation
+  ann(
+    done: Bool, // was this type-checked?
+    term: Fm.Term, // the annotated term
+    type: Fm.Term, // the annotated type
+  ),
+  // A hole to show the goal
+  gol(
+    name: Fm.Name, // the goal's name
+    dref: List(Bits), // a list of labels to expand when displaying it
+    verb: Bool, // show labels of expandable terms?
+  ),
+  // A hole to be auto-filled
+  hol(
+    path: Bits,
+  ),
+  // A natural number
+  nat(
+    natx: Nat,
+  ),
+  // A character
+  chr(
+    chrx: Char,
+  ),
+  // A string
+  str(
+    strx: String,
+  ),
+  // A syntax sugar
+  sug(
+    sugx: Fm.Sugar,
+  ),
+}
+
+// A syntax sugar
+type Fm.Sugar {
+  // A named application 'f(x: 1, y: 2, z: 3)'
+  app(
+    func: Fm.Term,
+    args: Map(Fm.Term),
+  ),
+  // A case-of: 'case f(x) as k with a:A = X; { zero: x, succ: y } : T'
+  cse(
+    expr: Fm.Term,
+    name: Fm.Name,
+    with: List(Fm.Def),
+    cses: Map(Fm.Term),
+    moti: Fm.Term,
+  ),
+}
+
+// A compilable term intermediate format
+type Fm.Comp {
+  nil,
+  var(name: Fm.Name),
+  ref(name: Fm.Name),
+  lam(name: Fm.Name, body: Fm.Comp),
+  app(func: Fm.Comp, argm: Fm.Comp),
+  let(name: Fm.Name, expr: Fm.Comp, body: Fm.Comp),
+}
+
+// A constructor
+type Fm.Constructor {
+  new(
+    name: Fm.Name,
+    args: List(Fm.Binder),
+    inds: List(Fm.Binder),
+  )
+}
+
+// An algebraic datatype
+type Fm.Datatype {
+  new(
+    name: Fm.Name,
+    pars: List(Fm.Binder),
+    inds: List(Fm.Binder),
+    ctrs: List(Fm.Constructor),
+  )
+}
+
+// A type error
+type Fm.Error {
+  // Two types do not match
+  type_mismatch(
+    expected: Either(String, Fm.Term),
+    detected: Either(String, Fm.Term),
+    context: Fm.Context,
+  ),
+  // Found a goal to be shown
+  show_goal(
+    name: Fm.Name,
+    dref: List(Bits),
+    verb: Bool,
+    goal: Maybe(Fm.Term),
+    context: Fm.Context,
+  ),
+  // Patch the original term
+  patch(
+    path: Bits,
+    term: Fm.Term,
+  ),
+  // Some reference isn't found
+  undefined_reference(
+    name: Fm.Name,
+  ),
+  // A lambda without a type
+  cant_infer(
+    term: Fm.Term,
+    context: Fm.Context,
+  ),
+}
+
+// The result of a type-checking attempt
+type Fm.Check<V: Type> {
+  result(
+    value: Maybe(V), // the returned value
+    errors: List(Fm.Error), // a list of errors
+  ),
+}
+
+// A top-level definition
+type Fm.Def {
+  new(
+    name: Fm.Name,
+    term: Fm.Term,
+    type: Fm.Term,
+    done: Bool,
+  ),
+}
+
+type Fm.Binder {
+  new(
+    eras: Bool,
+    name: Fm.Name,
+    term: Fm.Term,
+  )
+}
+
+// A map from Names to definitions
+Fm.Defs: Type
+  Map(Fm.Def)
+
+// A context is a list of (name, term) pairs
+Fm.Context: Type
+  List(Pair(Fm.Name,Fm.Term))
+
+// A path
+Fm.Path: Type
+  Bits -> Bits
+
+// Maybe a path
+Fm.MPath: Type
+  Maybe(Fm.Path)
+
+// Paths
+// =====
+
+Fm.Path.to_bits(path: Fm.Path): Bits
+  path(Bits.nil)
+
+Fm.Path.nil: Fm.Path
+  (x) x
+
+Fm.Path.0(path: Fm.Path): Fm.Path
+  (x) path(Bits.0(x))
+
+Fm.Path.1(path: Fm.Path): Fm.Path
+  (x) path(Bits.1(x))
+
+Fm.MPath.to_bits(path: Maybe(Fm.Path)): Bits
+  case path {
+    none: Bits.nil,
+    some: path.value(Bits.nil),
+  }
+
+Fm.MPath.nil: Maybe(Fm.Path)
+  Maybe.some<_>(Fm.Path.nil)
+
+Fm.MPath.0(path: Maybe(Fm.Path)): Maybe(Fm.Path)
+  Maybe.mapped<_>(path)<_>(Fm.Path.0)
+
+Fm.MPath.1(path: Maybe(Fm.Path)): Maybe(Fm.Path)
+  Maybe.mapped<_>(path)<_>(Fm.Path.1)
+
+// Contexts
+// ========
+
+// Gets a core term from a map by its name
+Fm.get<A: Type>(name: Fm.Name, map: Map(A)): Maybe(A)
+  Map.get<A>(Fm.Name.to_bits(name), map)
+
+// Adds a name, core term pair to a map
+Fm.set<A: Type>(name: Fm.Name, val: A, map: Map(A)): Map(A)
+  Map.set<A>(Fm.Name.to_bits(name), val, map)
+
+// Finds a value in a context
+Fm.Context.find(name: Fm.Name, ctx: Fm.Context): Maybe(Fm.Term)
+  case ctx {
+    nil:
+      Maybe.none<_>,
+    cons:
+      case ctx.head {
+        new:
+          if Fm.Name.eql(name, ctx.head.fst) then
+            Maybe.some<_>(ctx.head.snd)
+          else
+            Fm.Context.find(name, ctx.tail)
+      }
+  }
+
+// Gets the names of a context
+Fm.Context.names(ctx: Fm.Context): List(Fm.Name)
+  List.mapped<_>(ctx)<_>((x) Pair.fst<_,_>(x))
+
+
+// Stringification
+// ===============
+
+// Stringifies an error
+Fm.Error.show(error: Fm.Error, defs: Fm.Defs): String
+  case error {
+    type_mismatch: 
+      let expected = case error.expected {
+        left: error.expected.value,
+        right: Fm.Term.show(Fm.Term.normalize(error.expected.value, Map.new<_>)),
+      };
+      let detected = case error.detected {
+        left: error.detected.value,
+        right: Fm.Term.show(Fm.Term.normalize(error.detected.value, Map.new<_>)),
+      };
+      let context = Fm.Context.show(error.context);
+      String.flatten([
+        "Type mismatch.\n",
+        "- Expected: ", expected, "\n",
+        "- Detected: ", detected, "\n",
+        "With context:\n", context,
+      ]),
+    show_goal:
+      let goal_name = String.flatten([
+        "Goal ?",
+        Fm.Name.show(error.name),
+        ":\n",
+      ]);
+      let with_type = case error.goal {
+        none: "",
+        some: 
+          let goal = Fm.Term.expand(error.dref, error.goal.value, defs);
+          String.flatten([
+            "With type: ",
+            if error.verb then
+              Fm.Term.show.go(goal, Maybe.some<_>((x) x))
+            else
+              Fm.Term.show(goal),
+            "\n",
+          ]),
+      };
+      let with_ctxt = String.flatten([
+        "With ctxt:\n",
+        Fm.Context.show(error.context),
+      ]);
+      String.flatten([goal_name, with_type, with_ctxt]),
+    patch:
+      String.flatten([
+        "Patching: ", Fm.Term.show(error.term),
+      ]),
+    undefined_reference: 
+      String.flatten([
+        "Undefined reference: ", Fm.Name.show(error.name)
+      ]),
+    cant_infer:
+      let term = Fm.Term.show(error.term);
+      let context = Fm.Context.show(error.context);
+      String.flatten([
+        "Can't infer type of: ", term, "\n",
+        "With ctxt:\n", context,
+      ])
+  }
+
+// Stringifies a context
+Fm.Context.show(context: Fm.Context): String
+  case context {
+    nil: "",
+    cons: case context.head {
+      new:
+        let name = Fm.Name.show(context.head.fst);
+        let type = Fm.Term.show(context.head.snd);
+        let rest = Fm.Context.show(context.tail);
+        String.flatten([
+          rest,
+          if String.is_empty(rest) then "" else "\n",
+          "- ",
+          name,
+          ": ",
+          type,
+        ])
+    }
+  }
+
+// SHOW: Stringifies a term
+Fm.Term.show.go(term: Fm.Term, path: Maybe(Bits -> Bits)): String
+  case term {
+    ref:
+      let name = Fm.Name.show(term.name);
+      case path {
+        none:
+          name,
+        some: 
+          let path_val = Bits.concat(Fm.Path.to_bits(path.value), Bits.1(Bits.nil));
+          let path_str = Nat.show(Bits.to_nat(path_val));
+          String.flatten([name, "\x1b[2m-", path_str, "\x1b[0m"]),
+      },
+    var:
+      Fm.Name.show(term.name),
+    typ:
+      "Type",
+    all:
+      let eras = term.eras;
+      let self = Fm.Name.show(term.self);
+      let name = Fm.Name.show(term.name);
+      let type = Fm.Term.show.go(term.xtyp, Fm.MPath.0(path));
+      let open = if eras then "<" else "(";
+      let clos = if eras then ">" else ")";
+      let body = Fm.Term.show.go(
+        term.body(
+          Fm.Term.var(term.self, 0),
+          Fm.Term.var(term.name, 0)),
+        Fm.MPath.1(path));
+      String.flatten([self,open,name,":",type,clos," ",body]),
+    lam:
+      let name = Fm.Name.show(term.name);
+      let body = Fm.Term.show.go(
+        term.body(Fm.Term.var(term.name, 0)),
+        Fm.MPath.0(path));
+      String.flatten(["(",name,") ",body]),
+    app:
+      let func = Fm.Term.show.go(term.func, Fm.MPath.0(path));
+      let argm = Fm.Term.show.go(term.argm, Fm.MPath.1(path));
+      let wrap = case func {nil: Bool.false, cons: U16.eql(func.head,'(')};
+      if wrap then
+        String.flatten(["(",func,")","(",argm,")"])
+      else
+        String.flatten([func,"(",argm,")"]),
+    let:
+      let name = Fm.Name.show(term.name);
+      let expr = Fm.Term.show.go(term.expr, Fm.MPath.0(path));
+      let body = Fm.Term.show.go(
+        term.body(Fm.Term.var(term.name, 0)),
+        Fm.MPath.1(path));
+      String.flatten(["let ", name, " = ", expr, "; ", body]),
+    def:
+      let name = Fm.Name.show(term.name);
+      let expr = Fm.Term.show.go(term.expr, Fm.MPath.0(path));
+      let body = Fm.Term.show.go(
+        term.body(Fm.Term.var(term.name, 0)),
+        Fm.MPath.1(path));
+      String.flatten(["def ", name, " = ", expr, "; ", body]),
+    ann:
+      let term = Fm.Term.show.go(term.term, Fm.MPath.0(path));
+      let type = Fm.Term.show.go(term.type, Fm.MPath.1(path));
+      String.flatten([term,"::",type]),
+    gol:
+      let name = Fm.Name.show(term.name);
+      String.flatten(["?", name]),
+    hol:
+      "_",
+    nat:
+      String.flatten([Nat.show(term.natx)]),
+    chr:
+      String.cons(term.chrx, String.nil),
+    str:
+      String.flatten(["\"", term.strx, "\""]),
+    sug:
+      case term.sugx {
+        app:
+          let func = Fm.Term.show.go(term.sugx.func, Fm.MPath.0(path));
+          let args = Map.to_list<_>(term.sugx.args);
+          let args = List.mapped<_>(args)<_>((x) case x {
+            new: String.flatten([
+              Fm.Name.show(Fm.Name.from_bits(x.fst)),
+              ": ",
+              Fm.Term.show.go(x.snd, Maybe.none<_>),
+            ])
+          });
+          let args = String.join(", ", args);
+          let wrap = case func {nil: Bool.false, cons: U16.eql(func.head,'(')};
+          if wrap then
+            String.flatten(["(",func,")","(",args,")"])
+          else
+            String.flatten([func,"(",args,")"]),
+        cse:
+          let expr = Fm.Term.show.go(term.sugx.expr, Fm.MPath.0(path));
+          let name = Fm.Name.show(term.sugx.name);
+          let with = String.join("", List.mapped<_>(term.sugx.with)<_>((def)
+            case def {
+              new:
+                let name = Fm.Name.show(def.name);
+                let type = Fm.Term.show.go(def.type, Maybe.none<_>);
+                let term = Fm.Term.show.go(def.term, Maybe.none<_>);
+                String.flatten([name, ": ", type, " = " term, ";"])
+            }));
+          let cses = Map.to_list<_>(term.sugx.cses);
+          let cses = String.join("", List.mapped<_>(cses)<_>((x)
+            let name = Fm.Name.show(Fm.Name.from_bits(Pair.fst<_,_>(x)));
+            let term = Fm.Term.show.go(Pair.snd<_,_>(x), Maybe.none<_>);
+            String.flatten([name, ": ", term, "; "])));
+          let moti = Fm.Term.show.go(term.sugx.moti, Maybe.none<_>);
+          String.flatten(["case ",expr," as ",name,with," { ",cses,"} : ",moti])
+      },
+  }
+
+Fm.Term.show(term: Fm.Term): String
+  Fm.Term.show.go(term, Maybe.none<_>)
+
+// Stringifies a defs
+Fm.Defs.show(defs: Fm.Defs): String
+  let str = "";
+  for def in Map.to_list<Fm.Def>(defs) with str:
+    case def {
+      new: case def.snd as def {
+        new: String.flatten([
+          str,
+          Fm.Name.show(Fm.Name.from_bits(def.name)),
+          ": ",
+          Fm.Term.show(def.type),
+          "\n  ",
+          Fm.Term.show(def.term),
+          "\n",
+        ])
+      }
+    }
+
+// Reduction
+// =========
+
+// BIND: Binds named variables to their lambdas
+Fm.Term.bind(vars: Fm.Context, path: Fm.Path, term: Fm.Term): Fm.Term 
+  case term {
+    ref: case Fm.Context.find(term.name, vars) as got {
+      none: Fm.Term.ref(term.name),
+      some: got.value,
+    },
+    var: case List.at_last<_>(term.indx, vars) as got {
+      none: Fm.Term.var(term.name, term.indx),
+      some: Pair.snd<_,_>(got.value),
+    },
+    typ: Fm.Term.typ,
+    all: 
+      let vlen = List.length<_>(vars);
+      def xtyp = Fm.Term.bind(vars, Fm.Path.0(path), term.xtyp);
+      def body = (s,x) Fm.Term.bind(
+        List.cons<_>({term.name,x},
+          List.cons<_>({term.self,s},
+          vars)),
+        Fm.Path.1(path),
+        term.body(
+          Fm.Term.var(term.self, vlen),
+          Fm.Term.var(term.name, Nat.succ(vlen))));
+      Fm.Term.all(term.eras, term.self, term.name, xtyp, body),
+    lam:
+      let vlen = List.length<_>(vars);
+      def body = (x) Fm.Term.bind(
+        List.cons<_>({term.name,x},vars),
+        Fm.Path.0(path),
+        term.body(Fm.Term.var(term.name, vlen)));
+      Fm.Term.lam(term.name, body),
+    app:
+      def func = Fm.Term.bind(vars, Fm.Path.0(path), term.func);
+      def argm = Fm.Term.bind(vars, Fm.Path.1(path), term.argm);
+      Fm.Term.app(func, argm),
+    let:
+      let vlen = List.length<_>(vars);
+      def expr = Fm.Term.bind(vars, Fm.Path.0(path), term.expr);
+      def body = (x) Fm.Term.bind(
+        List.cons<_>({term.name,x}, vars),
+        Fm.Path.1(path),
+        term.body(Fm.Term.var(term.name, vlen)));
+      Fm.Term.let(term.name, expr, body),
+    def:
+      let vlen = List.length<_>(vars);
+      def expr = Fm.Term.bind(vars, Fm.Path.0(path), term.expr);
+      def body = (x) Fm.Term.bind(
+        List.cons<_>({term.name,x}, vars),
+        Fm.Path.1(path),
+        term.body(Fm.Term.var(term.name, vlen)));
+      Fm.Term.def(term.name, expr, body),
+    ann:
+      def term = Fm.Term.bind(vars, Fm.Path.0(path), term.term);
+      def type = Fm.Term.bind(vars, Fm.Path.1(path), term.type);
+      Fm.Term.ann(term.done, term, type),
+    gol:
+      Fm.Term.gol(term.name, term.dref, term.verb),
+    hol:
+      Fm.Term.hol(Fm.Path.to_bits(path)),
+    nat:
+      Fm.Term.nat(term.natx),
+    chr:
+      Fm.Term.chr(term.chrx),
+    str:
+      Fm.Term.str(term.strx),
+    sug: case term.sugx { // The TODOs below aren't essential/reachable (for now)
+      app:
+        let func = Fm.Term.bind(vars, Fm.Path.0(path), term.sugx.func);
+        let args = term.sugx.args; // TODO
+        Fm.Term.sug(Fm.Sugar.app(func, args)),
+      cse:
+        let expr = Fm.Term.bind(vars, Fm.Path.0(path), term.sugx.expr);
+        let name = term.sugx.name; // TODO
+        let with = term.sugx.with; // TODO
+        let cses = term.sugx.cses; // TODO
+        let moti = term.sugx.moti; // TODO
+        Fm.Term.sug(Fm.Sugar.cse(expr, name, with, cses, moti)),
+    },
+  }
+
+// REDUCE: Reduces a high order term to weak head normal form
+Fm.Term.reduce(term: Fm.Term, defs: Fm.Defs): Fm.Term
+  case term {
+    ref: case Fm.get<_>(term.name, defs) as got {
+      none: Fm.Term.ref(term.name),
+      some: case got.value { new: Fm.Term.reduce(got.value.term, defs) },
+    },
+    app:
+      let func = Fm.Term.reduce(term.func, defs);
+      case func {
+        lam: Fm.Term.reduce(func.body(term.argm), defs),
+        _: term,
+      },
+    let:
+      Fm.Term.reduce(term.body(term.expr), defs),
+    def:
+      Fm.Term.reduce(term.body(term.expr), defs),
+    ann:
+      Fm.Term.reduce(term.term, defs),
+    nat:
+      Fm.Term.reduce(Fm.Term.unroll_nat(term.natx), defs),
+    chr:
+      Fm.Term.reduce(Fm.Term.unroll_chr(term.chrx), defs),
+    str:
+      Fm.Term.reduce(Fm.Term.unroll_str(term.strx), defs),
+    _: term,
+  }
+
+// NORMALIZE: Normalizes a high order term
+Fm.Term.normalize(term: Fm.Term, defs: Fm.Defs): Fm.Term
+  case Fm.Term.reduce(term, defs) as term {
+    ref:
+      Fm.Term.ref(term.name),
+    var:
+      Fm.Term.var(term.name, term.indx),
+    typ:
+      Fm.Term.typ,
+    all: 
+      def xtyp = Fm.Term.normalize(term.xtyp, defs);
+      def body = (s,x) Fm.Term.normalize(term.body(s,x), defs);
+      Fm.Term.all(term.eras, term.self, term.name, xtyp, body),
+    lam:
+      def body = (x) Fm.Term.normalize(term.body(x), defs);
+      Fm.Term.lam(term.name, body),
+    app:
+      def func = Fm.Term.normalize(term.func, defs);
+      def argm = Fm.Term.normalize(term.argm, defs);
+      Fm.Term.app(func, argm),
+    let:
+      def expr = Fm.Term.normalize(term.expr, defs);
+      def body = (x) Fm.Term.normalize(term.body(x), defs);
+      Fm.Term.let(term.name, expr, body),
+    def:
+      def expr = Fm.Term.normalize(term.expr, defs);
+      def body = (x) Fm.Term.normalize(term.body(x), defs);
+      Fm.Term.def(term.name, expr, body),
+    ann:
+      def term = Fm.Term.normalize(term.term, defs);
+      def type = Fm.Term.normalize(term.type, defs);
+      Fm.Term.ann(term.done, term, type),
+    gol:
+      Fm.Term.gol(term.name, term.dref, term.verb),
+    hol:
+      Fm.Term.hol(term.path),
+    nat:
+      Fm.Term.nat(term.natx),
+    chr:
+      Fm.Term.chr(term.chrx),
+    str:
+      Fm.Term.str(term.strx),
+    sug:
+      term,
+  }
+
+// Patching
+// ========
+
+// PATCH_AT Does something at a specific path
+Fm.Term.patch_at(path: Bits, term: Fm.Term, fn: Fm.Term -> Fm.Term): Fm.Term
+  case term {
+    all: case path {
+      nil: fn(term),
+      0: Fm.Term.all(term.eras, term.self, term.name, Fm.Term.patch_at(path.pred,term.xtyp,fn), term.body),
+      1: Fm.Term.all(term.eras, term.self, term.name, term.xtyp, (s,x) Fm.Term.patch_at(path.pred,term.body(s,x),fn)),
+    },
+    lam: case path {
+      nil: fn(term),
+      0: Fm.Term.lam(term.name, (x) Fm.Term.patch_at(Bits.tail(path), term.body(x), fn)),
+      1: Fm.Term.lam(term.name, (x) Fm.Term.patch_at(Bits.tail(path), term.body(x), fn)),
+    },
+    app: case path {
+      nil: fn(term),
+      0: Fm.Term.app(Fm.Term.patch_at(path.pred,term.func,fn), term.argm),
+      1: Fm.Term.app(term.func, Fm.Term.patch_at(path.pred,term.argm,fn)),
+    },
+    let: case path {
+      nil: fn(term),
+      0: Fm.Term.let(term.name, Fm.Term.patch_at(path.pred,term.expr,fn), term.body),
+      1: Fm.Term.let(term.name, term.expr, (x) Fm.Term.patch_at(path.pred,term.body(x),fn)),
+    },
+    def: case path {
+      nil: fn(term),
+      0: Fm.Term.def(term.name, Fm.Term.patch_at(path.pred,term.expr,fn), term.body),
+      1: Fm.Term.def(term.name, term.expr, (x) Fm.Term.patch_at(path.pred,term.body(x),fn)),
+    },
+    ann: case path {
+      nil: fn(term),
+      0: Fm.Term.ann(term.done, Fm.Term.patch_at(path,term.term,fn), term.type),
+      1: Fm.Term.ann(term.done, Fm.Term.patch_at(path,term.term,fn), term.type),
+    },
+    _: term,
+  }
+
+// Expands the ref at given path
+//Fm.Term.expand_at(path: Bits, term: Fm.Term, defs: Fm.Defs): Fm.Term
+  //Fm.Term.patch_at(path, term, (term) case term {
+    //ref: case Fm.get<>(term.name, defs) as got {
+      //none: Fm.Term.ref(term.name),
+      //some: case got.value { new: got.value.term },
+    //},
+    //_: term,
+  //})
+
+
+
+main: Nat
+  case Bool.true {
+    _: 2,
+  }
+
+  //let state = 0;
+  //for x in [1, 2, 3] with state:
+    //Nat.add(x, state)
+
+
+  //do Maybe {
+    //ask a = Maybe.some<_>(1);
+    //ask b = Maybe.some<_>(2);
+    //return Nat.add(a, b);
   //}
 
-//String.flatten(xs: List(String)): String
-  //String.flatten.go(xs, "")
 
 
-//main: Nat
-  //(((x) x) :: _ -> _)(Nat.zero)
 
-main: List(Nat)
-  [1, 2, 3]
-  //U16.new(Word.from_bits(16))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//main: List(Nat)
+  //[1, 2, 3]
+  ////U16.new(Word.from_bits(16))
