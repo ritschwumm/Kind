@@ -2211,54 +2211,42 @@ Fm.synth.fix(
       }
   }
 
+Fm.synth.one(name: Fm.Name, term: Fm.Term, type: Fm.Term, defs: Fm.Defs): Fm.Def
+  let checked = do Fm.Check {
+    var chk_type = Fm.Term.check(type, Maybe.some<>(Fm.Term.typ), defs, [], Fm.MPath.1(Fm.MPath.nil));
+    var chk_term = Fm.Term.check(term, Maybe.some<>(type), defs, [], Fm.MPath.0(Fm.MPath.nil));
+    return Unit.new;
+  }
+  case checked {
+    result: case checked.errors {
+      nil:
+        Fm.Def.new(name, term, type, Bool.true),
+      cons:
+        let fixed = Fm.synth.fix(term, type, defs, checked.errors, Bool.false)
+        case fixed {
+          none:
+            Fm.Def.new(name, term, type, Bool.true),
+          some:
+            open fixed.value
+            let term = Fm.Term.bind([], Fm.Path.0(Fm.Path.nil), fixed.value.fst)
+            let type = Fm.Term.bind([], Fm.Path.1(Fm.Path.nil), fixed.value.snd)
+            Fm.synth.one(name, term, type, defs),
+        }
+    }
+  }
+
+
 // SYNTH: Checks the type of a core term, fixing repairable errors
 Fm.synth(defs: Fm.Defs): Fm.Defs
-  let state = {defs, Bool.false}
-  let state = for def in Map.to_list<>(defs):
-    open state
+  for def in Map.to_list<>(defs) with defs:
     open def
     open def.snd
-    let defs = state.fst
-    let fixs = state.snd
     let name = Fm.Name.from_bits(def.fst)
     let term = def.snd.term
     let type = def.snd.type
     let done = def.snd.done
-    let checked =
-      if done then do Fm.Check {
-        return Unit.new;
-      } else do Fm.Check {
-        var chk_type = Fm.Term.check(type, Maybe.some<>(Fm.Term.typ), defs, [], Fm.MPath.1(Fm.MPath.nil));
-        var chk_term = Fm.Term.check(term, Maybe.some<>(type), defs, [], Fm.MPath.0(Fm.MPath.nil));
-        return Unit.new;
-      }
-    case checked {
-      result: case checked.errors {
-        nil:
-          let defs = Fm.set<>(name, Fm.Def.new(name, term, type, Bool.true), defs)
-          {defs, fixs},
-        cons:
-          let fixed = Fm.synth.fix(term, type, defs, checked.errors, Bool.false)
-          case fixed {
-            none:
-              {defs, fixs},
-            some:
-              open fixed.value
-              let term = Fm.Term.bind([], Fm.Path.0(Fm.Path.nil), fixed.value.fst)
-              let type = Fm.Term.bind([], Fm.Path.1(Fm.Path.nil), fixed.value.snd)
-              let defs = Fm.set<>(name, Fm.Def.new(name, term, type, Bool.false), defs)
-              let fixs = Bool.true
-              {defs, fixs},
-          }
-      }
-    }
-  open state
-  let defs = state.fst
-  let fixs = state.snd
-  if fixs then
-    Fm.synth(defs)
-  else
-    defs
+    let defn = Fm.synth.one(name, term, type, defs)
+    Fm.set<>(name, defn, defs)
 
 // REPORT: Synths, checks and reports errors of a defs
 Fm.report(defs: Fm.Defs): String
