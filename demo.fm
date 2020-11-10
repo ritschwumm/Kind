@@ -1,0 +1,10 @@
+type Bool {
+  true,
+  false,
+}
+
+not(x: Bool): Bool
+  case x {
+    true: Type,
+    false: Bool.true,
+  }
