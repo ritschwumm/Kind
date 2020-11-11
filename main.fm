@@ -52,6 +52,10 @@ type Pair <A: Type, B: Type> {
   new(fst: A, snd: B)
 }
 
+type DPair <A: Type, B: (x: A) Type> {
+  new(fst: A, snd: B(fst))
+}
+
 type List <A: Type> {
   nil,
   cons(head: A, tail: List(A)),
@@ -1271,6 +1275,14 @@ type Fm.Sugar {
   ),
 }
 
+// A primitive type (
+type Fm.Prim {
+  bool,
+  nat,
+  u16,
+  string,
+}
+
 // A compilable term intermediate format
 type Fm.Comp {
   nil,
@@ -1279,6 +1291,11 @@ type Fm.Comp {
   lam(name: Fm.Name, body: Fm.Comp),
   app(func: Fm.Comp, argm: Fm.Comp),
   let(name: Fm.Name, expr: Fm.Comp, body: Fm.Comp),
+  eli(prim: Fm.Prim, expr: Fm.Comp),
+  ins(prim: Fm.Prim, expr: Fm.Comp),
+  nat(natx: Nat),
+  chr(chrx: Char),
+  str(strx: String),
 }
 
 // A constructor
@@ -1867,6 +1884,63 @@ Fm.Term.expand(dref: List(Bits), term: Fm.Term, defs: Fm.Defs): Fm.Term
 // ========
 
 // Helper function
+Fm.Term.serialize.string(term: Fm.Term, depth: Nat, init: Nat): String
+  case term {
+    ref:
+      term.name,
+    var:
+      if Nat.gte(term.indx, init) then
+        String.concat("#", Nat.show(Nat.pred(Nat.sub(depth,term.indx))))
+      else
+        String.concat("^", Nat.show(term.indx)),
+    typ:
+      "*",
+    all:
+      String.flatten([
+        "∀",
+        term.self,
+        Fm.Term.serialize.string(term.xtyp, depth, init),
+        Fm.Term.serialize.string(term.body(Fm.Term.var(term.self, depth), Fm.Term.var(term.name, Nat.succ(depth))), Nat.succ(Nat.succ(depth)), init),
+      ]),
+    lam:
+      String.flatten([
+        "λ",
+        Fm.Term.serialize.string(term.body(Fm.Term.var(term.name, depth)), Nat.succ(depth), init),
+      ]),
+    app:
+      String.flatten([
+        "@",
+        Fm.Term.serialize.string(term.func, depth, init),
+        Fm.Term.serialize.string(term.argm, depth, init),
+      ]),
+    let:
+      String.flatten([
+        "$",
+        Fm.Term.serialize.string(term.expr, depth, init),
+        Fm.Term.serialize.string(term.body(Fm.Term.var(term.name, depth)), Nat.succ(depth), init),
+      ]),
+    def:
+      Fm.Term.serialize.string(term.body(term.expr), depth, init),
+    ann:
+      Fm.Term.serialize.string(term.term, depth, init),
+    gol:
+      String.flatten([
+        "?",
+        term.name,
+      ]),
+    hol:
+      "_",
+    nat:
+      "_", // TODO
+    chr:
+      "_", // TODO
+    str:
+      "_", // TODO
+    sug:
+      "_",
+  }
+
+// Helper function
 Fm.Term.serialize.go(term: Fm.Term, depth: Nat, init: Nat, x: Bits): Bits
   case term {
     ref:
@@ -1958,9 +2032,13 @@ Fm.Term.equal(a: Fm.Term, b: Fm.Term, defs: Fm.Defs, lv: Nat, seen: Set): Fm.Che
               Fm.Term.var(b1.name, Nat.succ(lv)));
             do Fm.Check {
               let eq_self = String.eql(a1.self, b1.self);
-              var eq_type = Fm.Term.equal(a1.xtyp, b1.xtyp, defs, lv, seen);
-              var eq_body = Fm.Term.equal(a1_body, b1_body, defs, Nat.succ(Nat.succ(lv)), seen);
-              return Bool.and(eq_self, Bool.and(eq_type, eq_body));
+              if eq_self then do Fm.Check {
+                var eq_type = Fm.Term.equal(a1.xtyp, b1.xtyp, defs, lv, seen);
+                var eq_body = Fm.Term.equal(a1_body, b1_body, defs, Nat.succ(Nat.succ(lv)), seen);
+                return Bool.and(eq_type, eq_body);
+              } else do Fm.Check {
+                return Bool.false;
+              };
             },
           hol:
             Fm.Term.equal.patch(b1.path, a),
@@ -2400,19 +2478,6 @@ Fm.Term.desugar_cse(
       Maybe.none<_>,
   }
 
-
-
-
-
-
-
-
-
-
-
-
-// -------------------------------------------------------------------------
-
 // Desugars the case-of expression (cases)
 Fm.Term.desugar_cse.cases(
   expr: Fm.Term,
@@ -2592,12 +2657,14 @@ Fm.Datatype.build_term.constructor.go(
   args: List(Fm.Binder),
 ): Fm.Term
   case args {
-    cons:
-      let eras = case args.head { new: args.head.eras };
-      let name = case args.head { new: args.head.name };
-      let xtyp = case args.head { new: args.head.term };
-      let body = Fm.Datatype.build_term.constructor.go(type, ctor, args.tail);
-      Fm.Term.all(eras, "", name, xtyp, (s,x) body),
+    cons: case args.head {
+      new:
+        let eras = args.head.eras;
+        let name = args.head.name;
+        let xtyp = args.head.term;
+        let body = Fm.Datatype.build_term.constructor.go(type, ctor, args.tail);
+        Fm.Term.all(eras, "", name, xtyp, (s,x) body)
+    },
     nil:
       case type {
         new: case ctor {
@@ -2645,7 +2712,7 @@ Fm.Datatype.build_term.go(
       nil: 
         def moti = Fm.Datatype.build_term.motive(type);
         def body = (s,x) Fm.Datatype.build_term.constructors(type); // TODO
-        Fm.Term.all(Bool.false, String.concat(name,".Self"), Fm.Name.read("P"), moti, body)
+        Fm.Term.all(Bool.true, String.concat(name,".Self"), Fm.Name.read("P"), moti, body)
     }
   }
 
@@ -2950,7 +3017,7 @@ Fm.Parser.let: Parser(Fm.Term)
     var name = Fm.Parser.name;
     Fm.Parser.spaces_text("=");
     var expr = Fm.Parser.term;
-    Fm.Parser.spaces_text(";");
+    Parser.maybe<_>(Fm.Parser.spaces_text(";"));
     var body = Fm.Parser.term;
     return Fm.Term.let(name, expr, (x) body);
   }
@@ -2963,7 +3030,7 @@ Fm.Parser.def: Parser(Fm.Term)
     var name = Fm.Parser.name;
     Fm.Parser.spaces_text("=");
     var expr = Fm.Parser.term;
-    Fm.Parser.spaces_text(";");
+    Parser.maybe<_>(Fm.Parser.spaces_text(";"));
     var body = Fm.Parser.term;
     return Fm.Term.def(name, expr, (x) body);
   }
@@ -3506,6 +3573,39 @@ Fm.Defs.read(code: String): Maybe(Fm.Defs)
 // Compilers
 // =========
 
+Fm.Comp.prim_name(prim: Fm.Prim): String
+  case prim {
+    bool: "bool",
+    nat: "nat",
+    u16: "u16",
+    string: "string",
+  }
+
+Fm.Comp.prims: List(Pair(Fm.Term, Fm.Prim))
+  [
+    {Fm.Term.ref("Bool"), Fm.Prim.bool},
+    {Fm.Term.ref("Nat"), Fm.Prim.nat},
+    {Fm.Term.ref("U16"), Fm.Prim.u16},
+    {Fm.Term.ref("String"), Fm.Prim.string},
+  ]
+
+Fm.Comp.prim_of(type: Fm.Term, defs: Fm.Defs): Maybe(Fm.Prim)
+  List.fold<_>(Fm.Comp.prims)<Maybe(Fm.Prim)>(Maybe.none<_>, (name_prim, res)
+    case name_prim {
+      new:
+        let expr = name_prim.fst;
+        let prim = name_prim.snd;
+        let iseq = Fm.Term.equal(type, expr, defs, 0, Set.new);
+        let iseq = case Fm.Check.value<_>(iseq) as iseq {
+          some: iseq.value,
+          none: Bool.false,
+        };
+        if iseq then
+          Maybe.some<_>(prim)
+        else
+          res
+    })
+
 // Compiles a term to js
 Fm.Comp.compile(
   term: Fm.Term,
@@ -3513,6 +3613,11 @@ Fm.Comp.compile(
   defs: Fm.Defs,
   ctx: Fm.Context,
 ): Maybe(Fm.Comp)
+  //use skip = Debug.log<_>(String.flatten([
+    //"Compile: ",
+    //"- ", Fm.Term.show(term), "\n",
+    //"- ", Fm.Term.show(Maybe.default<>(Fm.Term.ref("_"), type)), "\n",
+  //]))
   case term {
     ref: do Maybe {
       return Fm.Comp.ref(term.name);
@@ -3538,12 +3643,13 @@ Fm.Comp.compile(
             let body_var = Fm.Term.var(term.name, ctx_size);
             let body_typ = typv.body(self_var, body_var);
             let body_ctx = List.cons<_>({term.name,typv.xtyp}, ctx);
-            var body_cmp = Fm.Comp.compile(
-              term.body(body_var),
-              Maybe.some<_>(body_typ),
-              defs,
-              body_ctx);
-            return Fm.Comp.lam(term.name, body_cmp);
+            var body_cmp = Fm.Comp.compile(term.body(body_var), Maybe.some<_>(body_typ), defs, body_ctx);
+            let term_cmp = if typv.eras then body_cmp else Fm.Comp.lam(term.name, body_cmp);
+            let term_cmp = case Fm.Comp.prim_of(type.value, defs) as prim {
+              none: term_cmp,
+              some: Fm.Comp.ins(prim.value, term_cmp),
+            };
+            return term_cmp;
           },
           _: Maybe.none<_>,
         }
@@ -3555,8 +3661,16 @@ Fm.Comp.compile(
         case func_typ {
           all: do Maybe {
             var func_cmp = Fm.Comp.compile(term.func, Maybe.none<_>, defs, ctx);
-            var argm_cmp = Fm.Comp.compile(term.argm, Maybe.some<_>(func_typ.xtyp), defs, ctx);
-            return Fm.Comp.app(func_cmp, argm_cmp);
+            let func_cmp = case Fm.Comp.prim_of(func_typ, defs) as prim {
+              none: func_cmp,
+              some: Fm.Comp.eli(prim.value, func_cmp),
+            };
+            if func_typ.eras then do Maybe {
+              return func_cmp;
+            } else do Maybe {
+              var argm_cmp = Fm.Comp.compile(term.argm, Maybe.some<_>(func_typ.xtyp), defs, ctx);
+              return Fm.Comp.app(func_cmp, argm_cmp);
+            };
           },
           _: Maybe.none<_>,
         };
@@ -3575,12 +3689,15 @@ Fm.Comp.compile(
       },
     def:
       Fm.Comp.compile(term.body(term.expr), type, defs, ctx),
-    nat:
-      Fm.Comp.compile(Fm.Term.unroll_nat(term.natx), type, defs, ctx),
-    chr:
-      Fm.Comp.compile(Fm.Term.unroll_chr(term.chrx), type, defs, ctx),
-    str:
-      Fm.Comp.compile(Fm.Term.unroll_str(term.strx), type, defs, ctx),
+    nat: do Maybe {
+      return Fm.Comp.nat(term.natx);
+    },
+    chr: do Maybe {
+      return Fm.Comp.chr(term.chrx);
+    },
+    str: do Maybe {
+      return Fm.Comp.str(term.strx);
+    },
     sug:
       Maybe.none<_>,
     gol: do Maybe {
@@ -3591,31 +3708,54 @@ Fm.Comp.compile(
     },
   }
 
-// Compile a term to JS
-Fm.Comp.js(comp: Fm.Comp): String
-  case comp {
-    nil: "null",
-    var: Fm.Name.show(comp.name),
-    ref: Fm.Name.show(comp.name),
-    lam: String.flatten([
-      "((", Fm.Name.show(comp.name), ")=>",
-      Fm.Comp.js(comp.body), ")"
-    ]),
-    app: String.flatten([
-      Fm.Comp.js(comp.func),
-      "(", Fm.Comp.js(comp.argm), ")",
-    ]),
-    let: String.flatten([
-      "((", Fm.Name.show(comp.name), ")=>",
-      Fm.Comp.js(comp.body), ")",
-      "(", Fm.Comp.js(comp.expr), ")",
-    ]),
+Fm.Comp.hs.name(name: Fm.Name): String
+  case name {
+    nil: "",
+    cons:
+      let chr =
+        if U16.btw('A', name.head, 'Z') then
+          U16.add(name.head, Nat.to_u16(32))
+        else if U16.eql(name.head, '.') then
+          '_'
+        else
+          name.head
+      String.cons(chr, Fm.Comp.hs.name(name.tail)),
   }
 
-// Compile defs to JS
-Fm.Comp.js.defs(defs: Fm.Defs): String
+// Compile a term to Haskell
+Fm.Comp.hs(comp: Fm.Comp): String
+  case comp {
+    nil: "()",
+    var: String.flatten(["_",Fm.Comp.hs.name(comp.name)]),
+    ref: String.flatten(["_",Fm.Comp.hs.name(comp.name)]),
+    lam: String.flatten(["(\\_", Fm.Comp.hs.name(comp.name), "-> ", Fm.Comp.hs(comp.body), ")"]),
+    app: String.flatten(["(app " ,Fm.Comp.hs(comp.func), " ", Fm.Comp.hs(comp.argm), ")"]),
+    let: String.flatten(["(let _",Fm.Comp.hs.name(comp.name)," = ",Fm.Comp.hs(comp.expr)," in ",Fm.Comp.hs(comp.body),")"]),
+    eli: String.flatten(["(_eli_",Fm.Comp.prim_name(comp.prim)," ",Fm.Comp.hs(comp.expr),")"]),
+    ins: String.flatten(["(_ins_",Fm.Comp.prim_name(comp.prim)," ",Fm.Comp.hs(comp.expr),")"]),
+    nat: String.flatten(["(",Nat.show(comp.natx),"::Integer)"]),
+    chr: String.flatten(["(",Nat.show(Bits.to_nat(Word.to_bits<_>(U16.to_word(comp.chrx)))),"::Word16)"]),
+    str: String.flatten([String.cons('"',String.nil), comp.strx, String.cons('"',String.nil)]),
+  }
+
+// Compile defs to Haskell
+Fm.Comp.hs.defs(defs: Fm.Defs): String
   let list = Map.to_list<_>(defs);
-  let code = "";
+  let code = String.join("\n", [
+    "import Unsafe.Coerce",
+    "import Data.Word",
+    "import Data.Bits",
+    "app = unsafeCoerce",
+    "_ins_bool = \\x-> x True False",
+    "_eli_bool = \\x-> case x of { True -> (\\t-> \\f-> t); False -> (\\t-> \\f-> f); }",
+    "_ins_nat = \\x-> (x 0 (\\p-> 1 + p)) :: Integer",
+    "_eli_nat = \\x-> \\z-> \\s-> if x == 0 then z else (app s (x - 1))",
+    "_ins_string = \\x-> x [] (\\h t-> (toEnum (fromIntegral h) :: Char) : t)",
+    "_eli_string = \\x-> case x::String of { []-> \\n e-> n; (c:cs)-> \\n e-> e(fromIntegral(fromEnum c) :: Word16)cs }",
+    "_ins_u16 = \\x-> x (\\x -> (go 0 0 x)::Word16) where go i u x = if i<16 then x u (\\x-> app go (i + 1) u x) (\\x-> app go (i+1) (u.|.(shiftL 1 i)) x) else u",
+    "_eli_u16 = \\x-> (\\t -> t (go 0 (\\n o i-> n) (x::Word16))) where go i w x = if i<16 then go (i+1) (if (shiftR x (16-i-1).&.1)>0 then \\n o i-> app i w else \\n o i-> app o w) x else w",
+    "",
+  ]);
   for def in list with code:
     case def {
       new: case def.snd {
@@ -3624,14 +3764,14 @@ Fm.Comp.js.defs(defs: Fm.Defs): String
           let comp = Fm.Comp.compile(def.snd.term, Maybe.some<_>(def.snd.type), defs, []);
           String.flatten([
             code,
-            "var ",
-            Fm.Name.show(name),
+            //"var ",
+            "_",Fm.Comp.hs.name(name),
             " = ",
             case comp {
-              none: "'error'",
-              some: Fm.Comp.js(comp.value),
+              none: "()",
+              some: Fm.Comp.hs(comp.value),
             },
-            ";\n",
+            "\n",
           ])
       }
     }
@@ -3641,12 +3781,16 @@ Fm.Comp.js.defs(defs: Fm.Defs): String
 
 main: IO(Unit)
   do IO {
+    let sstr = Fm.Term.serialize.string;
     var name = IO.get_args;
+    let name = case name { nil: "main.fm", cons: name };
+    let name = "main.fm";
     var file = IO.get_file(name);
     let defs = Maybe.default<_>(Map.new<_>, Fm.Defs.read(file));
     let defs = Fm.synth(defs);
     let report = Fm.report(defs);
     IO.print(report);
+    IO.print(Fm.Comp.hs.defs(defs));
   }
 
 //let main = case Fm.get<_>(Fm.Name.read("main"), defs) as got {
