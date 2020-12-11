@@ -3,6 +3,12 @@ type Map <A: Type> {
   tie(val: Maybe(A), lft: Map(A), rgt: Map(A)),
 }
 
+Map.is_empty<A: Type>(map: Map(A)): Bool
+  case map {
+    new: true,
+    tie: false,
+  }
+
 Map.fold<A: Type>(map: Map(A)): <P: Type> -> P -> (Maybe(A) -> P -> P -> P) -> P
   <P> (new, tie)
   case map {

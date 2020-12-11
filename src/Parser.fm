@@ -142,6 +142,13 @@ Parser.ErrorAt.combine(
     }
   }
 
+Parser.if<A: Type>(par: Parser(Unit), t: Parser(A), f: Parser(A)): Parser(A)
+  (idx,code)
+    case par(idx,code) as parsed {
+      error: f(parsed.idx, parsed.code),
+      value: t(parsed.idx, parsed.code),
+    }
+
 // Parses the first in a list
 Parser.first_of.go<A: Type>(pars: List(Parser(A)), err: Maybe(Parser.ErrorAt)): Parser(A)
   (idx,code) 
