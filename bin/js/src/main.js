@@ -110,7 +110,7 @@ function display_error(name, error){
         await fm.run(fm["Fm.checker.io.file"](name));
       }
     } catch (e) {
-      console.log("Internal JavaScript error. That may have been caused by an undecidable equality.");
+      console.log("Internal JavaScript error.");
     }
   }
 })();
