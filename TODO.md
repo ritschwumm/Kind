@@ -1,3 +1,11 @@
+- Move sugars to Term and write a desugarer/resugarer from Term to Core
+- Create Moonad.org such that it deals only with FormCore terms
+- Write a FormCore spec paper
+
+
+
+
+
 ## Optimize Formality's type-checker
 
 Currently, Formality's type-checker takes about 9 seconds to type-check itself

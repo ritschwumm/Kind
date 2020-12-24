@@ -96,17 +96,21 @@ function display_error(name, error){
 
   // Type-Checking
   } else {
-    if (name === "_") {
-      var files = fs.readdirSync(".").filter(x => x.slice(-3) === ".fm");
-      for (var file of files) {
-        console.log("\x1b[1mChecking ", file, "\x1b[0m\n");
-        fm.run(fm["Fm.checker.io.file"](file));
-        console.log("");
+    try {
+      if (name === "_") {
+        var files = fs.readdirSync(".").filter(x => x.slice(-3) === ".fm");
+        for (var file of files) {
+          console.log("\x1b[1mChecking ", file, "\x1b[0m\n");
+          await fm.run(fm["Fm.checker.io.file"](file));
+          console.log("");
+        }
+      } else if (name.slice(-3) !== ".fm" && name.slice(-5) !== ".fmfm") {
+        await fm.run(fm["Fm.checker.io.one"](name));
+      } else if (name) {
+        await fm.run(fm["Fm.checker.io.file"](name));
       }
-    } else if (name.slice(-3) !== ".fm" && name.slice(-5) !== ".fmfm") {
-      fm.run(fm["Fm.checker.io.one"](name));
-    } else if (name) {
-      fm.run(fm["Fm.checker.io.file"](name));
+    } catch (e) {
+      console.log("Internal JavaScript error. That may have been caused by an undecidable equality.");
     }
   }
 })();
