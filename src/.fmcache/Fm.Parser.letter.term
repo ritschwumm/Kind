@@ -1,0 +1,1 @@
+#idx #code (((code #code (Parser.Reply Fm.Letter)) ((((Parser.Reply.error Fm.Letter) idx) code) "Unexpected eof.")) #code.head #code.tail ((((Fm.Name.is_letter code.head) # (Parser.Reply Fm.Letter)) ((((Parser.Reply.value Char) (Nat.succ idx)) code.tail) code.head)) ((((Parser.Reply.error Fm.Letter) idx) code) "Expected letter.")))

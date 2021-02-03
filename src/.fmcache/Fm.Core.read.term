@@ -1,0 +1,1 @@
+#code (((Fm.Core.read.term ((String.concat code) ";")) #x (Maybe Fm.Term)) #code #term (((code #code (Maybe Fm.Term)) (Maybe.none Fm.Term)) #code.head #code.tail ((Maybe.some Fm.Term) (term (List.nil ((Pair String) Fm.Term))))))

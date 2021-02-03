@@ -1,0 +1,1 @@
+#A #xs #list (((xs #xs (List A)) list) #xs.val #xs.lft #xs.rgt !list0 = (((xs.val #xs.val (List A)) list) #xs.val.value (((List.cons A) xs.val.value) list)); !list1 = (((Map.values.go A) xs.lft) list0); !list2 = (((Map.values.go A) xs.rgt) list1); list2)

@@ -1,0 +1,1 @@
+#K #V %GMap.Self(P:@(:((GMap K) V)) *) @(tip:(P ((GMap.tip K) V))) @(bin:@(size:Nat) @(key:K) @(val:V) @(left:((GMap K) V)) @(right:((GMap K) V)) (P (((((((GMap.bin K) V) size) key) val) left) right))) (P GMap.Self)

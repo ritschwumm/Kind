@@ -1,0 +1,1 @@
+#term ((((Maybe.mapped Nat) (Fm.Term.show.as_nat.go term)) String) Nat.show)

@@ -1,0 +1,1 @@
+#A #B #fn #map (((map #map (Map B)) (Map.new B)) #map.val #map.lft #map.rgt !val = (((map.val #map.val (Maybe B)) (Maybe.none B)) #map.val.value ((Maybe.some B) (fn map.val.value))); !lft = ((((Map.map A) B) fn) map.lft); !rgt = ((((Map.map A) B) fn) map.rgt); ((((Map.tie B) val) lft) rgt))

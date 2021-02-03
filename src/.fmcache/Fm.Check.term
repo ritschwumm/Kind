@@ -1,0 +1,1 @@
+#V %Fm.Check.Self(P:@(:(Fm.Check V)) *) @(result:@(value:(Maybe V)) @(errors:(List Fm.Error)) (P (((Fm.Check.result V) value) errors))) (P Fm.Check.Self)

@@ -1,0 +1,1 @@
+#A #xs ((List.reverse Bits) ((((Map.keys.go A) xs) Bits.e) (List.nil Bits)))

@@ -1,0 +1,1 @@
+%Fm.Datatype.Self(P:@(:Fm.Datatype) *) @(new:@(name:Fm.Name) @(pars:(List Fm.Binder)) @(inds:(List Fm.Binder)) @(ctrs:(List Fm.Constructor)) (P ((((Fm.Datatype.new name) pars) inds) ctrs))) (P Fm.Datatype.Self)

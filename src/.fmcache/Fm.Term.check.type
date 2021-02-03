@@ -1,0 +1,1 @@
+@(term:Fm.Term) @(type:(Maybe Fm.Term)) @(defs:Fm.Defs) @(ctx:Fm.Context) @(path:Fm.MPath) @(orig:(Maybe ((Pair Nat) Nat))) (Fm.Check Fm.Term)

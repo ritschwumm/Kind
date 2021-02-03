@@ -1,0 +1,1 @@
+#a ((((a #a Bits) (Bits.i Bits.e)) #a.pred (Bits.i a.pred)) #a.pred (Bits.o (Bits.inc a.pred)))

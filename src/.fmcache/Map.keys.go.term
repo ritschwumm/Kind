@@ -1,0 +1,1 @@
+#A #xs #key #list (((xs #xs (List Bits)) list) #xs.val #xs.lft #xs.rgt !list0 = (((xs.val #xs.val (List Bits)) list) #xs.val.value (((List.cons Bits) (Bits.reverse key)) list)); !list1 = ((((Map.keys.go A) xs.lft) (Bits.o key)) list0); !list2 = ((((Map.keys.go A) xs.rgt) (Bits.i key)) list1); list2)

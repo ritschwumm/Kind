@@ -1,0 +1,1 @@
+((((((Monad.bind Parser) Parser.monad) Unit) Fm.Term) (Fm.Parser.text "(")) # ((((((Monad.bind Parser) Parser.monad) Fm.Term) Fm.Term) Fm.Parser.term) #term ((((((Monad.bind Parser) Parser.monad) Unit) Fm.Term) (Fm.Parser.text ")")) # ((((Monad.pure Parser) Parser.monad) Fm.Term) term))))

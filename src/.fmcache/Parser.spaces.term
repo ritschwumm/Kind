@@ -1,0 +1,1 @@
+((Parser.many Unit) ((Parser.first_of Unit) (((List.cons (Parser Unit)) (Parser.text " ")) (((List.cons (Parser Unit)) (Parser.text "\u{A}")) (List.nil (Parser Unit))))))

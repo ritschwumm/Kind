@@ -1,0 +1,1 @@
+#file #code #defs ((((((Monad.bind Parser) Parser.monad) (List Unit)) Fm.Defs) Fm.Parser.spaces) # ((((((Monad.bind Parser) Parser.monad) Unit) Fm.Defs) Parser.eof) # ((((Monad.pure Parser) Parser.monad) Fm.Defs) defs)))

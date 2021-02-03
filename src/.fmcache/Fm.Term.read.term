@@ -1,0 +1,1 @@
+#code (((((Fm.Parser.term +0) code) #parsed (Maybe Fm.Term)) #parsed.idx #parsed.code #parsed.err (Maybe.none Fm.Term)) #parsed.idx #parsed.code #parsed.val ((Maybe.some Fm.Term) parsed.val))

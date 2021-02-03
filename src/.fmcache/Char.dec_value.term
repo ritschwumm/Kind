@@ -1,0 +1,1 @@
+#chr (((((U16.eql chr) '0') # Nat) +0) (((((U16.eql chr) '1') # Nat) +1) (((((U16.eql chr) '2') # Nat) +2) (((((U16.eql chr) '3') # Nat) +3) (((((U16.eql chr) '4') # Nat) +4) (((((U16.eql chr) '5') # Nat) +5) (((((U16.eql chr) '6') # Nat) +6) (((((U16.eql chr) '7') # Nat) +7) (((((U16.eql chr) '8') # Nat) +8) (((((U16.eql chr) '9') # Nat) +9) +0))))))))))

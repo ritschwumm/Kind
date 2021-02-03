@@ -1,0 +1,1 @@
+#str (((str #str String) String.nil) #str.head #str.tail !head = (Fm.escape.char str.head); !tail = (Fm.escape str.tail); ((String.concat head) tail))

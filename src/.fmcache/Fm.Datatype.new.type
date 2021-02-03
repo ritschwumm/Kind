@@ -1,0 +1,1 @@
+@(name:Fm.Name) @(pars:(List Fm.Binder)) @(inds:(List Fm.Binder)) @(ctrs:(List Fm.Constructor)) Fm.Datatype

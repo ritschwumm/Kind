@@ -6,8 +6,8 @@ Fm.Defs.core(defs: Fm.Defs): String
         case defn.stat {
           done:
             let name = defn.name;
-            let term = Fm.Core.show(defn.term, 0, []);
-            let type = Fm.Core.show(defn.type, 0, []);
+            let term = Fm.Core.show(defn.term);
+            let type = Fm.Core.show(defn.type);
             String.flatten([result, name, " : ", type, " = ", term, ";\n"]),
           wait: result,
           init: result,

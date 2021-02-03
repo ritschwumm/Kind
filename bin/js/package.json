@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/moonad/formality#readme",
   "dependencies": {
-    "formcore-js": "^0.1.35"
+    "formcore-js": "^0.1.37"
   }
 }

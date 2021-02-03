@@ -1,0 +1,1 @@
+#F %Functor.Self(P:@(:(Functor F)) *) @(new:@(map:%(A:*) %(B:*) @(:@(:A) B) @(:(F A)) (F B)) (P ((Functor.new F) map))) (P Functor.Self)

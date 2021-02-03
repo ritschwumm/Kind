@@ -1,0 +1,1 @@
+%(A:*) @(xs:(List ((Pair Bits) A))) (Map A)

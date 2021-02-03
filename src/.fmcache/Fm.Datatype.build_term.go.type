@@ -1,0 +1,1 @@
+@(type:Fm.Datatype) @(name:Fm.Name) @(pars:(List Fm.Binder)) @(inds:(List Fm.Binder)) Fm.Term

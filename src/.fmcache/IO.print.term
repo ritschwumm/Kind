@@ -1,0 +1,1 @@
+#text ((((IO.ask Unit) "print") text) #skip ((IO.end Unit) Unit.new))

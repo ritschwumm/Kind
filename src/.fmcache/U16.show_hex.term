@@ -1,0 +1,1 @@
+#a ((a #a String) #a.value ((Nat.to_string_base +16) (Bits.to_nat ((Word.to_bits +16) a.value))))

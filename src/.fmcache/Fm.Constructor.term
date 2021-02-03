@@ -1,0 +1,1 @@
+%Fm.Constructor.Self(P:@(:Fm.Constructor) *) @(new:@(name:Fm.Name) @(args:(List Fm.Binder)) @(inds:(List Fm.Binder)) (P (((Fm.Constructor.new name) args) inds))) (P Fm.Constructor.Self)

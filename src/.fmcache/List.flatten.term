@@ -1,0 +1,1 @@
+#A #xs (((xs #xs (List A)) (List.nil A)) #xs.head #xs.tail (((List.concat A) xs.head) ((List.flatten A) xs.tail)))

@@ -1,0 +1,1 @@
+#name ((List.reverse String) ((Fm.Synth.files_of.make ((String.split name) ".")) ""))

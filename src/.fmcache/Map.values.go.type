@@ -1,0 +1,1 @@
+%(A:*) @(xs:(Map A)) @(list:(List A)) (List A)

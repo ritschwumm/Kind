@@ -1,0 +1,1 @@
+#str ((String.eql str) "true")

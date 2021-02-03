@@ -1,0 +1,1 @@
+#natx (((natx #natx Fm.Term) (Fm.Term.ref (Fm.Name.read "Nat.zero"))) #natx.pred !func = (Fm.Term.ref (Fm.Name.read "Nat.succ")); !argm = (Fm.Term.nat natx.pred); ((Fm.Term.app func) argm))

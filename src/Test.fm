@@ -1,0 +1,14 @@
+Test: String
+  let {code, read} = Fm.Core.read.term("%String.Self(P:@(:String) *) @(nil:(P String.nil)) @(cons:@(head:Char) @(tail:String) (P ((String.cons head) tail))) (P String.Self)")
+  let term = read([])
+  Fm.Core.show(term)
+
+  //let {code, nat} = Fm.Core.read.parse_natx("89012345611111", 0)
+  //nat
+  //Char.dec_value('7')
+  //let {code, chr} = Fm.Core.read.parse_codepoint("\\u{3bb}")
+  //String.cons(chr, String.nil)
+  //let {code, u16} = Fm.Core.read.parse_u16("51", 0s)
+  //String.cons(u16, String.nil)
+
+

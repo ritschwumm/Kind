@@ -1,0 +1,1 @@
+#n #xs (((n #n String) xs) #n.pred (((xs #xs String) String.nil) #xs.head #xs.tail ((String.drop n.pred) xs.tail)))

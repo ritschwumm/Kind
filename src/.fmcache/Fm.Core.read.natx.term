@@ -1,0 +1,1 @@
+#code #nat (((code #code ((Pair String) Nat)) ((((Pair.new String) Nat) code) nat)) #code.head #code.tail ((((Char.is_hex code.head) # ((Pair String) Nat)) !nat = ((Nat.add ((Nat.mul nat) +10)) (Char.dec_value code.head)); ((Fm.Core.read.natx code.tail) nat)) ((((Pair.new String) Nat) code) nat)))

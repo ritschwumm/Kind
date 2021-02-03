@@ -40,6 +40,10 @@ Fm.Synth.one(name: Fm.Name, defs: Fm.Defs): IO(Maybe(Fm.Defs))
                 //let skip = Debug.log<_>(String.join("\n", List.mapped<_>(checked.errors)<_>((x) String.concat("-- ", Fm.Error.show(x,Map.new<_>)))), (x) Unit.new);
                 if List.is_empty<_>(checked.errors) then do IO {
                   let defs = Fm.define(file, code, orig, name, term, type, isct, true, defs);
+                  IO.set_file(".fmcache/" | name | ".term", Fm.Core.show(term))
+                  IO.set_file(".fmcache/" | name | ".type", Fm.Core.show(type))
+                  IO.set_file(".fmcache/" | name | ".isct", Bool.show(isct))
+                  //IO.set_file(".fmcache/" | name | ".code", code)
                   //let defs = Fm.set<_>(name, Fm.Def.new(file, code, name, term, type, Fm.Status.done), defs);
                   return some(defs);
                 } else do IO {

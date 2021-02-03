@@ -1,0 +1,1 @@
+#A #B #a #f ((a #a (Fm.Check B)) #a.value #a.errors (((a.value #got (Fm.Check B)) (((Fm.Check.result B) (Maybe.none B)) a.errors)) #got.value (((f got.value) #b (Fm.Check B)) #b.value #b.errors (((Fm.Check.result B) b.value) (((List.concat Fm.Error) a.errors) b.errors)))))

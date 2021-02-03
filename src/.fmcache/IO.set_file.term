@@ -1,0 +1,1 @@
+#name #content ((((IO.ask Unit) "set_file") ((String.concat name) ((String.concat "=") content))) #ok ((IO.end Unit) Unit.new))

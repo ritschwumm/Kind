@@ -1,0 +1,1 @@
+#names #last (((names #names (List String)) (List.nil String)) #names.head #names.tail !head = ((String.concat last) ((String.concat names.head) ".fm")); !tail = ((Fm.Synth.files_of.make names.tail) ((String.concat last) ((String.concat names.head) "/"))); (((List.cons String) head) tail))

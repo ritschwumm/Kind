@@ -1,0 +1,1 @@
+#A #index #list (((List.at A) index) ((List.reverse A) list))

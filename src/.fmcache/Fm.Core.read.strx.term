@@ -1,0 +1,1 @@
+#code (((((String.starts_with code) "\"") # ((Pair String) String)) ((((Pair.new String) String) code) "")) (((Fm.Core.read.chrx code) #x ((Pair String) String)) #code #chrx (((Fm.Core.read.strx code) #x ((Pair String) String)) #code #rest ((((Pair.new String) String) code) ((String.cons chrx) rest)))))

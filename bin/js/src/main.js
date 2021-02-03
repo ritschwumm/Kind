@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --stack-size=16000
 
 var fm = require("./formality.js");
 var fs = require("fs");

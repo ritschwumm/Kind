@@ -1,0 +1,1 @@
+#code #u16 (((code #code ((Pair String) Char)) ((((Pair.new String) Char) code) u16)) #code.head #code.tail ((((Char.is_hex code.head) # ((Pair String) Char)) !u16 = ((U16.add ((U16.mul u16) (Nat.to_u16 +16))) (Char.hex_value16 code.head)); ((Fm.Core.read.u16 code.tail) u16)) ((((Pair.new String) Char) code) u16)))

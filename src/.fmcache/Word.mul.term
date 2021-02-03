@@ -1,0 +1,1 @@
+#size #a #b (((Word.mul size) a) b)

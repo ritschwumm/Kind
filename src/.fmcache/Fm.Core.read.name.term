@@ -1,0 +1,1 @@
+#code (((code #code ((Pair String) String)) ((((Pair.new String) String) code) "")) #code.head #code.tail ((((Fm.Core.read.is_name code.head) # ((Pair String) String)) (((Fm.Core.read.name code.tail) #x ((Pair String) String)) #code #name ((((Pair.new String) String) code) ((String.cons code.head) name)))) ((((Pair.new String) String) code) "")))

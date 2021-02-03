@@ -1,0 +1,1 @@
+@(type:Fm.Datatype) @(ctor:Fm.Constructor) Fm.Term

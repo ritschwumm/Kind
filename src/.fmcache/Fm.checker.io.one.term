@@ -1,0 +1,1 @@
+#name ((((((Monad.bind IO) IO.monad) (Maybe Fm.Defs)) Unit) ((Fm.Synth.one name) (Map.new Fm.Def))) #new_defs (((new_defs #new_defs (IO Unit)) (IO.print ((Fm.Defs.report (Map.new Fm.Def)) (((List.cons Fm.Name) name) (List.nil Fm.Name))))) #new_defs.value (IO.print ((Fm.Defs.report new_defs.value) (((List.cons Fm.Name) name) (List.nil Fm.Name))))))

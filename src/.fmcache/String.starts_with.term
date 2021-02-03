@@ -1,0 +1,1 @@
+#xs #match (((match #match Bool) Bool.true) #match.head #match.tail (((xs #xs Bool) Bool.false) #xs.head #xs.tail (((((Char.eql match.head) xs.head) #self Bool) ((String.starts_with xs.tail) match.tail)) Bool.false)))

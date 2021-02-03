@@ -1,0 +1,1 @@
+%(A:*) %(B:*) @(a:(Fm.Check A)) @(f:@(:A) (Fm.Check B)) (Fm.Check B)

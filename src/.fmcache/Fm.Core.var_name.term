@@ -1,0 +1,1 @@
+#indx #name #brui #vars (((indx #indx Fm.Name) (((brui #brui Fm.Name) name) #brui.pred ((String.concat name) ((String.concat "^") (Nat.show brui))))) #indx.pred (((vars #vars Fm.Name) "unbound") #vars.head #vars.tail !brui = (((((String.eql name) vars.head) # Nat) (Nat.succ brui)) brui); ((((Fm.Core.var_name indx.pred) name) brui) vars.tail)))

@@ -1,0 +1,1 @@
+#b ((((b #b Nat) +0) #b.pred ((Nat.mul +2) (Bits.to_nat b.pred))) #b.pred (Nat.succ ((Nat.mul +2) (Bits.to_nat b.pred))))

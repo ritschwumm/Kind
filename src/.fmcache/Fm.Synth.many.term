@@ -1,0 +1,1 @@
+#names #defs (((names #names (IO Fm.Defs)) ((((Monad.pure IO) IO.monad) Fm.Defs) defs)) #names.head #names.tail ((((((Monad.bind IO) IO.monad) (Maybe Fm.Defs)) Fm.Defs) ((Fm.Synth.one names.head) defs)) #new_defs (((new_defs #new_defs (IO Fm.Defs)) ((Fm.Synth.many names.tail) defs)) #new_defs.value ((Fm.Synth.many names.tail) new_defs.value))))

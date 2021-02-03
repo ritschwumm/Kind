@@ -1,0 +1,1 @@
+#code #chr (((Fm.Core.read.spaces code) #x ((Pair String) Unit)) #code #skip (((code #code ((Pair String) Unit)) ((((Pair.new String) Unit) "") Unit.new)) #code.head #code.tail (((((U16.eql code.head) chr) # ((Pair String) Unit)) ((((Pair.new String) Unit) code.tail) Unit.new)) ((((Pair.new String) Unit) "") Unit.new))))

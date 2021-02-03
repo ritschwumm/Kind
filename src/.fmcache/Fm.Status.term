@@ -1,0 +1,1 @@
+%Fm.Status.Self(P:@(:Fm.Status) *) @(init:(P Fm.Status.init)) @(wait:(P Fm.Status.wait)) @(done:(P Fm.Status.done)) @(fail:@(errors:(List Fm.Error)) (P (Fm.Status.fail errors))) (P Fm.Status.Self)

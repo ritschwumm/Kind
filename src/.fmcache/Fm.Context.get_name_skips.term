@@ -1,0 +1,1 @@
+#name (((name #name ((Pair Fm.Name) Nat)) ((((Pair.new String) Nat) "") +0)) #name.head #name.tail !name_skips = (Fm.Context.get_name_skips name.tail); ((name_skips #x ((Pair Fm.Name) Nat)) #name #skips (((((U16.eql name.head) '^') # ((Pair String) Nat)) ((((Pair.new Fm.Name) Nat) name) (Nat.succ skips))) ((((Pair.new String) Nat) ((String.cons name.head) name)) skips))))

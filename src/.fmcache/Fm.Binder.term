@@ -1,0 +1,1 @@
+%Fm.Binder.Self(P:@(:Fm.Binder) *) @(new:@(eras:Bool) @(name:Fm.Name) @(term:Fm.Term) (P (((Fm.Binder.new eras) name) term))) (P Fm.Binder.Self)

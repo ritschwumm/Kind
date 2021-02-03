@@ -1,0 +1,1 @@
+#type #ctor ((type #type Fm.Term) #type.name #type.pars #type.inds #type.ctrs ((ctor #ctor Fm.Term) #ctor.name #ctor.args #ctor.inds (((((Fm.Constructor.build_type.go type) ctor) type.name) type.pars) ctor.args)))

@@ -1,0 +1,1 @@
+#A #xs (((Map.values.go A) xs) (List.nil A))

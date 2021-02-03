@@ -1,0 +1,1 @@
+#V #value (((Fm.Check.result V) ((Maybe.some V) value)) (List.nil Fm.Error))

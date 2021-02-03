@@ -1,0 +1,1 @@
+%(A:*) @(list:(List A)) @(cond:@(:A) @(:Nat) Bool) @(indx:Nat) @(skip:Nat) (Maybe ((Pair A) Nat))

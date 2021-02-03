@@ -1,0 +1,1 @@
+#init #term ((((((Monad.bind Parser) Parser.monad) Unit) Fm.Term) (Fm.Parser.text "::")) # ((((((Monad.bind Parser) Parser.monad) Fm.Term) Fm.Term) Fm.Parser.term) #type ((((((Monad.bind Parser) Parser.monad) ((Pair Nat) Nat)) Fm.Term) (Fm.Parser.stop init)) #orig ((((Monad.pure Parser) Parser.monad) Fm.Term) ((Fm.Term.ori orig) (((Fm.Term.ann Bool.false) term) type))))))

@@ -1,0 +1,1 @@
+#A #xs (((xs #xs (Map A)) (Map.new A)) #xs.head #xs.tail ((xs.head #p (Map A)) #p.fst #p.snd ((((Map.set A) p.fst) p.snd) ((Map.from_list A) xs.tail))))

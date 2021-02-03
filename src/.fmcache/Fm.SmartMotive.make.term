@@ -1,0 +1,1 @@
+#name #expr #type #moti #lv #defs !vals = (((Fm.SmartMotive.vals expr) type) defs); !nams = (((Fm.SmartMotive.nams name) type) defs); !subs = ((((List.zip Fm.Name) Fm.Term) nams) vals); !moti = (((((List.fold ((Pair Fm.Name) Fm.Term)) subs) Fm.Term) moti) #sub #moti ((sub #sub Fm.Term) #sub.fst #sub.snd ((((Fm.SmartMotive.replace moti) sub.snd) (Fm.Term.ref sub.fst)) lv))); moti

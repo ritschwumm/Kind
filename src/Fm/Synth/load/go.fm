@@ -10,13 +10,139 @@ Fm.Synth.load.go(name: String, files: List(String), defs: Fm.Defs): IO(Maybe(Fm.
         left: Fm.Synth.load.go(name, files.tail, defs)
         right: do IO {
           let defs = read.value
-          case Fm.get<_>(name, defs) as got {
+          case Fm.get!(name, defs) as got {
             none: Fm.Synth.load.go(name, files.tail, defs),
             some: do IO {
-              return some(defs)
+              var cached = Fm.Synth.load.cached.name(name, defs)
+              case cached {
+                none: do IO {
+                  return some(defs)
+                }
+                some: do IO {
+                  return some(cached.value)
+                }
+              }
             }
           }
         }
       }
+    }
+  }
+
+Fm.Synth.load.cached.name(name: String, defs: Fm.Defs): IO(Maybe(Fm.Defs))
+  do IO {
+    var cached_type_code = IO.get_file(".fmcache/" | name | ".type")
+    case cached_type_code {
+      nil: do IO {
+        return none
+      }
+      cons: do IO {
+        var cached_term_code = IO.get_file(".fmcache/" | name | ".term")
+        var cached_isct_code = IO.get_file(".fmcache/" | name | ".isct")
+        let term = Fm.Core.read(cached_term_code)
+        let type = Fm.Core.read(cached_type_code)
+        let isct = Bool.read(cached_isct_code)
+        case term {
+          none:
+            //log("cache-parse-fail:\n " | cached_term_code)
+            do IO {
+              return none
+            }
+          some: case type {
+            none:
+              //log("cache-parse-fail:\n " | cached_type_code)
+              do IO {
+                return none
+              }
+            some:
+              //log("cached " | name)
+              do IO {
+                let term = term.value
+                let type = type.value
+                let defs = Fm.define("cache","",{0,0},name,term,type,isct,true,defs) // TODO: store isct on cache
+                var defs = Fm.Synth.load.cached.deps(term,defs)
+                var defs = Fm.Synth.load.cached.deps(type,defs)
+                return some(defs)
+              }
+          }
+        }
+      }
+    }
+  }
+        
+Fm.Synth.load.cached.deps(term: Fm.Term, defs: Fm.Defs): IO(Fm.Defs)
+  case term {
+    var: do IO {
+      return defs
+    }
+    ref: case Fm.get!(term.name, defs) {
+      none: do IO { 
+        var got = Fm.Synth.load.cached.name(term.name, defs)
+        case got {
+          none: do IO {
+            return defs
+          }
+          some: do IO {
+            return got.value
+          }
+        }
+      }
+      some: do IO {
+        return defs
+      }
+    }
+    typ: do IO {
+      return defs
+    }
+    all: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.xtyp, defs)
+      var defs = Fm.Synth.load.cached.deps(term.body(Fm.Term.typ,Fm.Term.typ), defs)
+      return defs
+    }
+    lam: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.body(Fm.Term.typ), defs)
+      return defs
+    }
+    app: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.func, defs)
+      var defs = Fm.Synth.load.cached.deps(term.argm, defs)
+      return defs
+    }
+    let: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.expr, defs)
+      var defs = Fm.Synth.load.cached.deps(term.body(Fm.Term.typ), defs)
+      return defs
+    }
+    def: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.expr, defs)
+      var defs = Fm.Synth.load.cached.deps(term.body(Fm.Term.typ), defs)
+      return defs
+    }
+    ann: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.term, defs)
+      var defs = Fm.Synth.load.cached.deps(term.type, defs)
+      return defs
+    }
+    gol: do IO {
+      return defs
+    }
+    hol: do IO {
+      return defs
+    }
+    nat: do IO {
+      return defs
+    }
+    chr: do IO {
+      return defs
+    }
+    str: do IO {
+      return defs
+    }
+    cse: do IO {
+      return defs
+    }
+    ori: do IO {
+      var defs = Fm.Synth.load.cached.deps(term.expr, defs)
+      return defs
     }
   }
