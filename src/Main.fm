@@ -1,4 +1,2 @@
-Main: IO(Unit)
-  do IO {
-    IO.print("Hello, world!")
-  }
+double_negation(b: Bool): Bool.not(Bool.not(b)) == b
+  ?a
