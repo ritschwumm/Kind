@@ -22,16 +22,16 @@ Mons.draw(game: Mons.Game, scr: Image3D): Image3D
     
     case game.stt as stt{
       welcome:
-      let Mons.Assets.logo = Image3D.empty // TODO: add real image
-      let scr = Mons.draw.image(Mons.Assets.logo, Pos32.new(120u,80u,0u), scr)
+      let Mons.Assets.screen.logo = Image3D.empty // TODO: add real image
+      let scr = Mons.draw.image(Mons.Assets.screen.logo, Pos32.new(120u,80u,0u), scr)
       let scr = Mons.draw.list(["Play", "Credits"], Bool.false, 25u, Mons.font_white, Pos32.new(40u,50u,0u), scr)
       let scr = Mons.draw.list_selector(stt.idx, Bool.false, 25u, Mons.font_white, Pos32.new(30u,50u,0u), scr)
       let scr = Mons.draw.text("[c] Select", Mons.font_white, Pos32.new(40u,128u,0u), scr)
       scr
 
       credits:
-      let Mons.Assets.battle_normal_bg_full = Image3D.empty // TODO: add real image
-      let scr = Mons.draw.image(Mons.Assets.battle_normal_bg_full, Pos32.new(120u,80u,0u), scr)
+      let Mons.Assets.screen.battle_normal_bg_full = Image3D.empty // TODO: add real image
+      let scr = Mons.draw.image(Mons.Assets.screen.battle_normal_bg_full, Pos32.new(120u,80u,0u), scr)
       let artists0 = ["Alexandre Avila", "Caio Carvalho", "Johnny Azevedo", "Lucca Tuelher", "Maisa Milena", "Marcio Maia", "Marcos Medeiros"]
       let artists1 = ["Marcos Motta", "Nathan Danjo", "Paulo Reis", "Pedro Taka", "Rodrigo Rodrigues", "Victor Maia", "Yuri Carvalho"]
       let scr = Mons.draw.text("[z] Back", Mons.font_white, Pos32.new(20u,15u,0u), scr)
@@ -181,7 +181,7 @@ Mons.draw(game: Mons.Game, scr: Image3D): Image3D
   }
 
 Mons.draw.text_screen_bg: Image3D // TODO: add real image
-  // Mons.Assets.text_screen_bg
+  // Mons.Assets.screen.text_screen_bg
   Image3D.empty
 
 // Given a tile (x, y) and an object, returns its global (x, y) positions
@@ -210,8 +210,8 @@ Mons.draw.global_xy(t_x: U32, t_y: U32, obj: Mons.Object): Pair(U32, U32)
 
 // Draw an inventory showing mons captured and their names
 Mons.draw.bag(obj: Mons.Object, idx: U32, scr: Image3D): Image3D
-  let Mons.Assets.inventory = Image3D.empty // TODO: add real image
-  let scr = Mons.draw.image(Mons.Assets.inventory, Pos32.new(120u,80u,0u), scr)
+  let Mons.Assets.screen.inventory = Image3D.empty // TODO: add real image
+  let scr = Mons.draw.image(Mons.Assets.screen.inventory, Pos32.new(120u,80u,0u), scr)
   let scr = Mons.draw.image(Mons.draw.get_full_bg(idx), Pos32.new(120u,80u,0u), scr)
   open obj
   let boss_def = U32.to_string(Nat.to_u32(List.length<_>(obj.bos)))
@@ -242,23 +242,23 @@ Mons.draw.bag_select(mon_idx: U32, qtd: U32, scr: Image3D): Image3D
     else Pos32.new(160u, U32.add(def_y, U32.mul(16u, mon_idx)), 0u)
   if U32.eql(qtd, 0u) then scr
   else 
-    let Mons.Assets.inventory_row_mon_selected = Image3D.empty // TODO: add real image
-    Mons.draw.image(Mons.Assets.inventory_row_mon_selected, pos, scr)
+    let Mons.Assets.screen.inventory_row_mon_selected = Image3D.empty // TODO: add real image
+    Mons.draw.image(Mons.Assets.screen.inventory_row_mon_selected, pos, scr)
 
 // Draw an inventory showing mons captured, their names and options to
 // replace or skip the "mon capture"
 Mons.draw.full_bag(obj: Mons.Object, adve_obj: Mons.Object, idx: U32, scr: Image3D): Image3D
-  let Mons.Assets.inventory_mon_selection = Image3D.empty // TODO: add real image
-  let Mons.Assets.inventory_replace = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.inventory_mon_selection = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.inventory_replace = Image3D.empty // TODO: add real image
   let scr = Mons.draw.image(Mons.draw.get_full_bg(idx), Pos32.new(120u,80u,0u), scr)
   let scr = Mons.draw.image(Mons.draw.text_screen_bg, Pos32.new(120u,80u,0u), scr)
-  let scr = Mons.draw.image(Mons.Assets.inventory_replace, Pos32.new(65u,60u,0u), scr)
+  let scr = Mons.draw.image(Mons.Assets.screen.inventory_replace, Pos32.new(65u,60u,0u), scr)
   open obj
   open adve_obj
   open Mons.Kind.attr(adve_obj.kin) as adve_attr
   let scr = Mons.draw.image(adve_attr.battle_spr(Bool.false), Pos32.new(180u,40u,0u), scr)
   let scr = Mons.draw.image(adve_attr.pic, Pos32.new(180u,90u,0u), scr)
-  let scr = Mons.draw.image(Mons.Assets.inventory_mon_selection, Pos32.new(180u,90u,0u), scr)
+  let scr = Mons.draw.image(Mons.Assets.screen.inventory_mon_selection, Pos32.new(180u,90u,0u), scr)
   
   let qtd = Nat.to_u32(List.length<_>(obj.bag))
   let mons_images = List.reverse<_>(Mons.Object.get_images(obj.bag))
@@ -281,8 +281,8 @@ Mons.draw.mon_img_selected(mon_idx: U32, qtd: U32, horizontal: Bool, spacing: U3
       if horizontal then Pos32.new(U32.add(x_pos, U32.mul(spacing, mon_idx)),y_pos,0u)
       else Pos32.new(x_pos, U32.add(y_pos, U32.mul(spacing, mon_idx)), 0u)
   if U32.eql(qtd, 0u) then scr
-  else let Mons.Assets.inventory_mon_selected = Image3D.empty // TODO: add real image
-    Mons.draw.image(Mons.Assets.inventory_mon_selected, pos, scr)
+  else let Mons.Assets.screen.inventory_mon_selected = Image3D.empty // TODO: add real image
+    Mons.draw.image(Mons.Assets.screen.inventory_mon_selected, pos, scr)
 
 // Draw auxiliars
 // -------------
@@ -331,8 +331,8 @@ Mons.draw.list_image.go(images: List(Image3D), horizontal: Bool, spacing: U32, p
    case images{
    nil: scr
    cons:
-     let Mons.Assets.inventory_mon_selection = Image3D.empty // TODO: add real image
-     let scr = Mons.draw.image(Mons.Assets.inventory_mon_selection, pos, scr)
+     let Mons.Assets.screen.inventory_mon_selection = Image3D.empty // TODO: add real image
+     let scr = Mons.draw.image(Mons.Assets.screen.inventory_mon_selection, pos, scr)
      let scr = Mons.draw.image(images.head, pos, scr)
      let pos = if horizontal then
         Pos32.new(U32.add(x, spacing),y,0u)
@@ -379,7 +379,7 @@ Mons.draw.cur_sprite(idl: U32, sprites: List(Image3D)): Image3D
   let idl_nat = U32.to_nat(U32.sub(idl, 1u))
   let idx = Nat.mod(Nat.div(idl_nat, 4), len_sprite)
   case List.at<_>(idx, sprites) as spr{
-    none: Image3D.empty // TODO: Mons.Assets.void
+    none: Image3D.empty // TODO: Mons.Assets.screen.void
     some: spr.value
   }
 
@@ -387,13 +387,13 @@ Mons.draw.cur_sprite(idl: U32, sprites: List(Image3D)): Image3D
 // -------
 // Draw the scene to select one of three Mons to start the game
 Mons.draw.mage_talk(text_0: String, text_1: String, scr: Image3D): Image3D
-  let Mons.Assets.battle_boy_u = Image3D.empty // TODO: add real image
-  let Mons.Assets.battle_mage_d = Image3D.empty // TODO: add real image
+  let Mons.Assets.char.battle_boy_u = Image3D.empty // TODO: add real image
+  let Mons.Assets.char.battle_mage_d = Image3D.empty // TODO: add real image
   let scr = Mons.draw.image(Mons.draw.text_screen_bg, Pos32.new(120u,80u,0u), scr)
   let scr = Mons.draw.text(text_0, Mons.font_black, Mons.draw.msg_screen.line_0, scr)
   let scr = Mons.draw.text(text_1, Mons.font_black, Mons.draw.msg_screen.line_1, scr)
-  let scr = Mons.draw.image(Mons.Assets.battle_boy_u, Pos32.new(75u,85u,0u), scr) 
-  let scr = Mons.draw.image(Mons.Assets.battle_mage_d, Pos32.new(180u,80u,0u), scr)
+  let scr = Mons.draw.image(Mons.Assets.char.battle_boy_u, Pos32.new(75u,85u,0u), scr) 
+  let scr = Mons.draw.image(Mons.Assets.char.battle_mage_d, Pos32.new(180u,80u,0u), scr)
   scr
 
 Mons.draw.initial_mons(obj: Mons.Object, scr: Image3D): Image3D
@@ -413,13 +413,13 @@ Mons.draw.initial_mons(obj: Mons.Object, scr: Image3D): Image3D
     scr
 
 Mons.draw.battle_bg(adve_kind: Mons.Kind.mons, is_boss: Bool, idx: U32, scr: Image3D): Image3D
-  let Mons.Assets.battle_default = Image3D.empty // TODO: add real image
-  let Mons.Assets.battle_boss = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.battle_default = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.battle_boss = Image3D.empty // TODO: add real image
   let scr = Mons.draw.image(Mons.draw.get_battle_bg(idx), Pos32.new(120u,80u,0u), scr)
   let scr = 
     if is_boss then
-      Mons.draw.image(Mons.Assets.battle_boss, Pos32.new(120u,80u,0u), scr)
-    else Mons.draw.image(Mons.Assets.battle_default, Pos32.new(120u,80u,0u), scr)
+      Mons.draw.image(Mons.Assets.screen.battle_boss, Pos32.new(120u,80u,0u), scr)
+    else Mons.draw.image(Mons.Assets.screen.battle_default, Pos32.new(120u,80u,0u), scr)
   scr
 
 Mons.draw.capture_bg(adve_kind: Mons.Kind.mons, idx: U32, scr: Image3D): Image3D
@@ -428,29 +428,29 @@ Mons.draw.capture_bg(adve_kind: Mons.Kind.mons, idx: U32, scr: Image3D): Image3D
   scr
 
 Mons.draw.adve_hp(chp: U32, mhp: U32, name: String, adve_hp: String, scr: Image3D): Image3D
-  let Mons.Assets.battle_hp = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.battle_hp = Image3D.empty // TODO: add real image
   let p_hp = U32.div(U32.mul(chp, 70u), mhp) // x = 66u: full hp
   let pos_chp = Pos32.new(p_hp,21u,0u) 
   let pos_name = Pos32.new(38u,21u,0u)
-  let scr = Mons.draw.image(Mons.Assets.battle_hp, pos_chp, scr)
+  let scr = Mons.draw.image(Mons.Assets.screen.battle_hp, pos_chp, scr)
   let scr = Mons.draw.text(name, Mons.font_white, pos_name, scr)
   let scr = Mons.draw.text(adve_hp, Mons.font_black, Pos32.new(38u,36u,0u), scr)
   scr
 
 Mons.draw.hero_hp(chp: U32, mhp: U32, name: String, hero_hp: String, scr: Image3D): Image3D
-  let Mons.Assets.battle_hp = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.battle_hp = Image3D.empty // TODO: add real image
   let p_hp = U32.div(U32.mul(chp, 70u), mhp) 
   let pos_chp = Pos32.new(U32.add(100u, p_hp),82u,0u) // x = 175u: full hp
   let pos_name = Pos32.new(139u,82u,0u)
-  let scr = Mons.draw.image(Mons.Assets.battle_hp, pos_chp, scr)
+  let scr = Mons.draw.image(Mons.Assets.screen.battle_hp, pos_chp, scr)
   let scr = Mons.draw.text(name, Mons.font_white, pos_name, scr)
   let scr = Mons.draw.text(hero_hp, Mons.font_black, Pos32.new(139u,97u,0u), scr)
   scr
 
 Mons.draw.battle_win_bg(adve_kind: Mons.Kind.mons, idx: U32, scr: Image3D): Image3D
-  let Mons.Assets.battle_win = Image3D.empty // TODO: add real image
+  let Mons.Assets.screen.battle_win = Image3D.empty // TODO: add real image
   let scr = Mons.draw.image(Mons.draw.get_full_bg(idx), Pos32.new(120u,80u,0u), scr)
-  let scr = Mons.draw.image(Mons.Assets.battle_win, Pos32.new(70u,90u,0u), scr)
+  let scr = Mons.draw.image(Mons.Assets.screen.battle_win, Pos32.new(70u,90u,0u), scr)
   let scr = Mons.draw.image(Mons.draw.text_screen_bg, Pos32.new(120u,80u,0u), scr)
   scr
 
@@ -458,13 +458,13 @@ Mons.draw.battle_win_bg(adve_kind: Mons.Kind.mons, idx: U32, scr: Image3D): Imag
 // The boss will have a different background.
 Mons.draw.background(idx: U32): Pair(Image3D, Image3D)
   if U32.eql(idx, 1u) then
-    // {Mons.Assets.battle_normal_bg, Mons.Assets.battle_normal_bg_full}
+    // {Mons.Assets.screen.battle_normal_bg, Mons.Assets.screen.battle_normal_bg_full}
     {Image3D.empty, Image3D.empty}
   else if U32.eql(idx, 2u) then // Normal type boss
-    // {Mons.Assets.battle_normal_boss_bg, Mons.Assets.battle_normal_bg_full}
+    // {Mons.Assets.screen.battle_normal_boss_bg, Mons.Assets.screen.battle_normal_bg_full}
     {Image3D.empty, Image3D.empty}
   else
-    // {Mons.Assets.battle_normal_bg, Mons.Assets.battle_normal_bg_full}
+    // {Mons.Assets.screen.battle_normal_bg, Mons.Assets.screen.battle_normal_bg_full}
     {Image3D.empty, Image3D.empty}
 
 Mons.draw.get_battle_bg(idx: U32): Image3D
