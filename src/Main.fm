@@ -1,5 +1,7 @@
-// double_negation(b: Bool): Bool.not(Bool.not(b)) == b
-//   ?a
+Main: IO(Unit)
+  do IO {
+    IO.put_string("Hello, world!")
+  }
 
 // Main: IO(Unit)
 //   do IO {
