@@ -39,7 +39,7 @@ module.exports = class AppPlay extends Component {
   // Initializes the pixel-art canvas
   async init_canvas(width, height) {
     if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height) {
-      console.log("init_canvas", width, height);
+      // console.log("init_canvas", width, height);
       this.canvas = document.createElement("canvas");
       this.canvas.style["image-rendering"] = "pixelated";
       this.canvas.width = width;
@@ -206,15 +206,15 @@ module.exports = class AppPlay extends Component {
 
   // Executes an event, returning the updated state
   execute_event(ev, state) {
-    console.log("execute_event", JSON.stringify(ev));
+    // console.log("execute_event", JSON.stringify(ev));
     var actions = this.app.when(ev)(state);
     while (actions._ === "List.cons") {
       var action = actions.head;
-      console.log("execute_action", JSON.stringify(action));
+      // console.log("execute_action", JSON.stringify(action));
       switch (action._) {
         case "App.Action.state":
           state = action.value;
-          console.log("new state", state)
+          // console.log("new state", state)
           break;
         case "App.Action.print":
           if (!ev.done) {

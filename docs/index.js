@@ -2738,6 +2738,7 @@ module.exports = class AppPlay extends Component {
 
 module.exports = {
   'Web.Demo': __webpack_require__.e(/* import() */ 987).then(__webpack_require__.t.bind(__webpack_require__, 987, 23)),
+  'Mons': __webpack_require__.e(/* import() */ 191).then(__webpack_require__.t.bind(__webpack_require__, 191, 23)),
 }
 
 

@@ -1281,35 +1281,35 @@ Mons.Attr.new_neutral(spr: List(Image3D)): Mons.Attr
 
 Mons.Attr.new_hero: Mons.Attr
   Mons.Attr.new_neutral([Image3D.empty])
-//   Mons.Attr.new(false, 40u, 0u, "HERO",
-//     (x,y,obj_ani,obj_dir) 
-//       Mons.walk_char_pack(
-//         x, y, obj_ani, obj_dir,
-//         Mons.Assets.boy_r_0, Mons.Assets.boy_u_0, 
-//         Mons.Assets.boy_l_0, Mons.Assets.boy_d_0,
+  // Mons.Attr.new(false, 40u, 0u, "HERO",
+  //   (x,y,obj_ani,obj_dir) 
+  //     Mons.walk_char_pack(
+  //       x, y, obj_ani, obj_dir,
+  //       Mons.Assets.char.boy_r_0, Mons.Assets.char.boy_u_0, 
+  //       Mons.Assets.char.boy_l_0, Mons.Assets.char.boy_d_0,
 
-//         Mons.Assets.boy_r_1, Mons.Assets.boy_u_1,
-//         Mons.Assets.boy_l_1, Mons.Assets.boy_d_1,
+  //       Mons.Assets.char.boy_r_1, Mons.Assets.char.boy_u_1,
+  //       Mons.Assets.char.boy_l_1, Mons.Assets.char.boy_d_1,
 
-//         Mons.Assets.boy_r_2, Mons.Assets.boy_u_2,
-//         Mons.Assets.boy_l_2, Mons.Assets.boy_d_2),
-//         [ ],
-//         Mons.Assets.boy_d_0,
-//       (is_up) Bool.if<>(is_up,Mons.Assets.battle_boy_u,Mons.Assets.battle_boy_u),
-//       [Mons.Skill.hero_kill, Mons.Skill.none, Mons.Skill.none, Mons.Skill.none],
-//       Mons.global_scr_mid // placeholder
-//   )
+  //       Mons.Assets.char.boy_r_2, Mons.Assets.char.boy_u_2,
+  //       Mons.Assets.char.boy_l_2, Mons.Assets.char.boy_d_2),
+  //       [ ],
+  //       Mons.Assets.char.boy_d_0,
+  //     (is_up) Bool.if<>(is_up,Mons.Assets.char.battle_boy_u,Mons.Assets.char.battle_boy_u),
+  //     [Mons.Skill.hero_kill, Mons.Skill.none, Mons.Skill.none, Mons.Skill.none],
+  //     Mons.global_scr_mid // placeholder
+  // )
 
 Mons.Attr.new_mage: Mons.Attr
   Mons.Attr.new_neutral([Image3D.empty])
-  // Mons.Attr.new(
-  //   false, 40u, 0u, "MAGE",
-  //   Mons.Kind.set_static_sprites([Mons.Assets.mons_mage]),
-  //   [Mons.Assets.mons_mage],
-  //   Mons.Assets.mons_mage,
-  //   (is_up: Bool) Mons.Assets.battle_mage_d,
-  //   Mons.Skill.dummy_skills, 
-  //   Mons.image_to_global(74u, 74u, 40u, 12u, 0u))
+//   Mons.Attr.new(
+//     false, 40u, 0u, "MAGE",
+//     Mons.Kind.set_static_sprites([Mons.Assets.char.mons_mage]),
+//     [Mons.Assets.char.mons_mage],
+//     Mons.Assets.char.mons_mage,
+//     (is_up: Bool) Mons.Assets.char.battle_mage_d,
+//     Mons.Skill.dummy_skills, 
+//     Mons.image_to_global(74u, 74u, 40u, 12u, 0u))
 
 Mons.Dir.move(dir: Mons.Dir, pos: Pos32): Pos32
   case dir {
@@ -2054,13 +2054,14 @@ Mons.start(online: Bool): App(Mons.Game)
       game_map, 
       // Mons.Screen.introduction(0u),
       Mons.Screen.welcome(0u),
+      // Mons.Screen.game('.', Mons.Turn.empty),
       0u // tik
     )
     // let game = Mons.Game.add_animated_obj(game)
     game
 
   // Render function
-  def draw = (game) App.Render.vox(Mons.draw(game, screen))
+  def draw = (game) App.Render.pix(Mons.draw(game, screen))
 
   // Event handlers
   def when = (event, game)

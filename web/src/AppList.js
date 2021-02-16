@@ -4,6 +4,7 @@ const apps = require("./apps/index.js");
 
 module.exports = class AppList extends Component {
   render() {
+    console.log("Apps: ", apps);
     var list = Object.keys(apps).map(app => {
       return h("div", {}, [
         h("span", {}, "- "),
