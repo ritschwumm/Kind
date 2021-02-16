@@ -332,13 +332,9 @@ Mons.Kind.get_pos(kin: Mons.Kind): Pos32
 // name: String
 // spr: (x: U32) -> (y: U32) -> (obj_ani: U32) -> (obj_dir: Mons.Dir)-> List(Image3D)
 Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
-  // let default_pos = Mons.global_scr_mid
-  // let set_pos_lvl1 = 
-  //   ((x: U32, y: U32) Mons.image_to_global(80u, 80u, x, y, 1u)) 
-  //   :: U32 -> U32 -> Pos32
-  // let set_pos_lvl2 = 
-  //   ((x: U32, y: U32) Mons.image_to_global(20u, 20u, x, y, 2u))
-  //   :: U32 -> U32 -> Pos32
+  let default_pos = Mons.global_scr_mid
+  let set_pos_lvl1 = ((x, y) Mons.image_to_global(80u, 80u, x, y, 1u)) :: U32 -> U32 -> Pos32
+  let set_pos_lvl2 = ((x, y) Mons.image_to_global(20u, 20u, x, y, 2u)) :: U32 -> U32 -> Pos32
   Mons.Attr.new_neutral([Image3D.empty])
   // case kin{
   //   Mons: 

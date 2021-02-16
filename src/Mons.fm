@@ -1295,21 +1295,21 @@ Mons.Attr.new_hero: Mons.Attr
   //       Mons.Assets.char.boy_l_2, Mons.Assets.char.boy_d_2),
   //       [ ],
   //       Mons.Assets.char.boy_d_0,
-  //     (is_up) Bool.if<>(is_up,Mons.Assets.char.battle_boy_u,Mons.Assets.char.battle_boy_u),
+  //     (is_up) Bool.if<_>(is_up,Mons.Assets.char.battle_boy_u,Mons.Assets.char.battle_boy_u),
   //     [Mons.Skill.hero_kill, Mons.Skill.none, Mons.Skill.none, Mons.Skill.none],
   //     Mons.global_scr_mid // placeholder
   // )
 
 Mons.Attr.new_mage: Mons.Attr
   Mons.Attr.new_neutral([Image3D.empty])
-//   Mons.Attr.new(
-//     false, 40u, 0u, "MAGE",
-//     Mons.Kind.set_static_sprites([Mons.Assets.char.mons_mage]),
-//     [Mons.Assets.char.mons_mage],
-//     Mons.Assets.char.mons_mage,
-//     (is_up: Bool) Mons.Assets.char.battle_mage_d,
-//     Mons.Skill.dummy_skills, 
-//     Mons.image_to_global(74u, 74u, 40u, 12u, 0u))
+  // Mons.Attr.new(
+  //   false, 40u, 0u, "MAGE",
+  //   Mons.Kind.set_static_sprites([Mons.Assets.char.mons_mage]),
+  //   [Mons.Assets.char.mons_mage],
+  //   Mons.Assets.char.mons_mage,
+  //   (is_up: Bool) Mons.Assets.char.battle_mage_d,
+  //   Mons.Skill.dummy_skills, 
+  //   Mons.image_to_global(74u, 74u, 40u, 12u, 0u))
 
 Mons.Dir.move(dir: Mons.Dir, pos: Pos32): Pos32
   case dir {

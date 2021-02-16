@@ -8,7 +8,7 @@ var fm_dir = __dirname+"/../src";
 
 process.chdir(fm_dir);
 // var files = fs.readdirSync("Web").filter(x => x.slice(-3) === ".fm");
-var files = ["Mons", "Web/Demo"];
+var files = ["Mons"];
 
 var apps = [];
 
