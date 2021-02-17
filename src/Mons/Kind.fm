@@ -335,56 +335,56 @@ Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
   let default_pos = Mons.global_scr_mid
   let set_pos_lvl1 = ((x, y) Mons.image_to_global(80u, 80u, x, y, 1u)) :: U32 -> U32 -> Pos32
   let set_pos_lvl2 = ((x, y) Mons.image_to_global(20u, 20u, x, y, 2u)) :: U32 -> U32 -> Pos32
-  Mons.Attr.new_neutral([Image3D.empty])
-  // case kin{
-  //   Mons: 
-  //   case kin.ele as kin{
-  //     HERO: Mons.Attr.new_hero
-  //     MAGE: Mons.Attr.new_mage
+  // Mons.Attr.new_neutral([Image3D.empty])
+  case kin{
+    Mons: 
+    case kin.ele as kin {
+      HERO: Mons.Attr.new_hero
+      MAGE: Mons.Attr.new_mage
     
-  //     BEHOLDER:
+      BEHOLDER: Mons.Attr.new_neutral([Image3D.empty])
       // Mons.Attr.new_battleable(
       // Mons.Assets.pic_beholder, [Mons.Assets.mons_beholder_d_0], "BEHOLDER",
       // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_beholder_u, Mons.Assets.battle_beholder_d),
       // [Mons.Skill.super_fang, Mons.Skill.nightmare, Mons.Skill.protect, Mons.Skill.hypnosis], 
       // set_pos_lvl2(10u, 10u))
     
-  //     ZOIO:
+      ZOIO: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_zoio, [Mons.Assets.mons_zoio_d_0], "ZOIO",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_zoio_u, Mons.Assets.battle_zoio_d),
   //     // [Mons.Skill.slam, Mons.Skill.sand_tomb, Mons.Skill.protect, Mons.Skill.dig],
   //     // set_pos_lvl1(38u, 52u))
     
-  //     CYCLOPE:
+      CYCLOPE: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_cyclop, [Mons.Assets.mons_cyclop_d_0], "CYCLOPE",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_cyclop_u, Mons.Assets.battle_cyclop_d),
   //     // [Mons.Skill.slam, Mons.Skill.rock_smash, Mons.Skill.recover, Mons.Skill.counter ],
   //     // set_pos_lvl1(61u, 49u))
     
-  //     POISOLICK:
+      POISOLICK: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_poisolick, [Mons.Assets.mons_poisolick_d_0], "POISOLICK",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_poisolick_u, Mons.Assets.battle_poisolick_d),
   //     // [Mons.Skill.crunch, Mons.Skill.sludge_bomb, Mons.Skill.iron_defense, Mons.Skill.gyro_ball],
   //     // set_pos_lvl1(62u, 19u))
     
-  //     TROWL:
+      TROWL: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_trowl, [Mons.Assets.mons_trowl_d_0], "TROWL",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_trowl_u, Mons.Assets.battle_trowl_d),
   //     // [Mons.Skill.wing_attack, Mons.Skill.crunch, Mons.Skill.recover, Mons.Skill.agility],
   //     // set_pos_lvl1(19u, 38u))
     
-  //     MIMIC:
+      MIMIC: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_mimic, [Mons.Assets.mons_mimic_d_0], "MIMIC",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_mimic_u, Mons.Assets.battle_mimic_d),
   //     // [Mons.Skill.super_fang, Mons.Skill.crunch, Mons.Skill.hypnosis, Mons.Skill.dream_eater],
   //     // set_pos_lvl1(41u, 24u))
     
-  //     MIMIC2:
+      MIMIC2: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_mimic, [Mons.Assets.mons_mimic_d_0], "MIMIC",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_mimic_u, Mons.Assets.battle_mimic_d),
@@ -392,30 +392,30 @@ Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
   //     // // set_pos_lvl1(62u, 33u))
   //     // set_pos_lvl2(10u, 10u))
     
-  //     AZULA:
+      AZULA: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_azula, [Mons.Assets.mons_azula_d_0], "AZULA",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_azula_u, Mons.Assets.battle_azula_d),
   //     // [Mons.Skill.wing_attack, Mons.Skill.moonlight, Mons.Skill.play_rough, Mons.Skill.psychic],
   //     // set_pos_lvl1(46u, 38u))
     
-  //     EMERELDER:
+      EMERELDER: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_emerelder, [Mons.Assets.mons_emerelder_d_0], "EMERELDER",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_emerelder_u, Mons.Assets.battle_emerelder_d),
   //     // [Mons.Skill.ancient_power, Mons.Skill.thunder_wave, Mons.Skill.charge, Mons.Skill.iron_defense],
   //     // set_pos_lvl1(16u, 22u))
 
-  //     EMERELDER2:
+      EMERELDER2: Mons.Attr.new_neutral([Image3D.empty])
   //     // Mons.Attr.new_battleable(
   //     // Mons.Assets.pic_emerelder, [Mons.Assets.mons_emerelder_d_0], "EMERELDER",
   //     // (is_up) Bool.if<_>(is_up, Mons.Assets.battle_emerelder_u, Mons.Assets.battle_emerelder_d),
   //     // [Mons.Skill.ancient_power, Mons.Skill.thunder_wave, Mons.Skill.charge, Mons.Skill.iron_defense],
   //     // set_pos_lvl1(23u, 27u))
 
-  // } // end mons
+    } // end mons
   
-  // Construction:
+  Const: Mons.Attr.new_neutral([Image3D.empty])
   //   case kin.ele as kin{
   //     FOUNTAIN:
   //       Mons.Attr.new_blockable([
@@ -435,7 +435,7 @@ Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
   //       Mons.Assets.portal_6, Mons.Assets.portal_7])
   //   } // end of construction
 
-  // Terrain: 
+  Terrain:  Mons.Attr.new_neutral([Image3D.empty])
   //   case kin.ele as kin{
   //   VOID: Mons.Attr.new_blockable([Mons.Assets.void])
   //   VOID_BLACK: Mons.Attr.new_blockable([Mons.Assets.void_black])
@@ -470,7 +470,7 @@ Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
   //   MON_AREA: Mons.Attr.new_neutral([Mons.Assets.grass_2])
   //   } // end terrain
 
-  //   Interactive:
+    Interactive: Mons.Attr.new_neutral([Image3D.empty])
   //     case kin.ele as kin{
   //       lever:
         // if kin.on then Mons.Attr.new_neutral([Mons.Assets.push_tool_on])
@@ -486,8 +486,8 @@ Mons.Kind.attr(kin: Mons.Kind): Mons.Attr
         //     Mons.Assets.healing_point_00, Mons.Assets.healing_point_01,
         //     Mons.Assets.healing_point_02, Mons.Assets.healing_point_03])
       
-  //     } // end inter
-  // }
+      // } // end inter
+  }
     
 
 // Mons.Kind.mid_city(row: U32, column: U32): Mons.Attr
