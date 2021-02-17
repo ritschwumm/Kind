@@ -9,7 +9,7 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "formality-js": "^0.2.56",
+    "formality-js": "^0.2.62",
     "inferno": "^7.4.6",
     "inferno-hyperscript": "^7.4.6"
   },
