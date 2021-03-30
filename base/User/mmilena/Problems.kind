@@ -1,0 +1,333 @@
+// Returs true if both inputs are true
+User.mmilena.Problems.p0(a: Bool, b: Bool): Bool
+  Bool.and(a,b)
+
+// Returs true if any input is true
+User.mmilena.Problems.p1(a: Bool, b: Bool): Bool
+  Bool.or(a,b)
+
+// Returs true if both inputs are identical
+User.mmilena.Problems.p2(a: Bool, b: Bool): Bool
+  case a{
+    true : b
+    false: Bool.not(b)
+  }
+
+// Returns the first element of a pair
+User.mmilena.Problems.p3<A: Type, B: Type>(pair: Pair<A,B>): A
+  Pair.fst!!(pair)
+
+// Returns the second element of a pair
+User.mmilena.Problems.p4<A: Type, B: Type>(pair: Pair<A,B>): B
+  open pair 
+  pair.snd
+
+// Inverses the order of the elements of a pair
+User.mmilena.Problems.p5<A: Type, B: Type>(pair: Pair<A,B>): Pair<B,A>
+  open pair 
+  Pair.new<B,A>(pair.snd, pair.fst)
+
+// Applies a function to both elements of a Pair
+User.mmilena.Problems.p6<A: Type, B: Type>(fn: A -> B, pair: Pair<A,A>): Pair<B,B>
+  open pair
+  Pair.new<B,B>(fn(pair.fst), fn(pair.snd))
+
+// Doubles a number
+User.mmilena.Problems.p7(n: Nat): Nat
+  case n{
+    zero: Nat.zero
+    succ: Nat.succ(Nat.succ(User.mmilena.Problems.p7(n.pred)))
+  }
+
+// Halves a number, rounding down
+User.mmilena.Problems.p8(n: Nat): Nat
+  case n{
+    zero: Nat.zero
+    succ: 
+      case n.pred as p{
+        zero: Nat.zero
+        succ: Nat.succ(User.mmilena.Problems.p8(p.pred))
+      }
+  }
+
+// Adds two numbers
+User.mmilena.Problems.p9(a: Nat, b: Nat): Nat
+  case a{
+    zero: b
+    succ: User.mmilena.Problems.p9(a.pred, Nat.succ(b))
+  }
+
+// Subtracts two numbers
+User.mmilena.Problems.p10(a: Nat, b: Nat): Nat
+  case b{
+    zero: a
+    succ:
+      case a{
+        zero: Nat.zero
+        succ: User.mmilena.Problems.p10(a.pred, b.pred)
+      } 
+  }
+
+// Multiplies two numbers
+User.mmilena.Problems.p11(a: Nat, b: Nat): Nat
+  User.mmilena.Problems.p11.a(a, b, 0)
+
+User.mmilena.Problems.p11.a(a: Nat, b: Nat, r: Nat): Nat
+  case a{
+    zero: r
+    succ: User.mmilena.Problems.p11.a(a.pred, b, Nat.add(b, r))
+  }
+
+// Returns true if a < b
+User.mmilena.Problems.p12(a: Nat, b: Nat): Bool
+  case a {
+    zero: 
+      case b{
+        zero: false
+        succ: true
+      }
+    succ:
+      case b{
+        zero: false
+        succ: User.mmilena.Problems.p12(a.pred,b.pred)
+      }
+  }
+
+// Returns true if a == b
+User.mmilena.Problems.p13(a: Nat, b: Nat): Bool
+  case a {
+    zero: 
+      case b{
+        zero: true
+        succ: false
+      }
+    succ:
+      case b{
+        zero: false
+        succ: User.mmilena.Problems.p13(a.pred,b.pred)
+      }
+  }
+
+// Returns the first element of a List
+User.mmilena.Problems.p14<A: Type>(xs: List<A>): Maybe(A)
+  case xs{
+    nil : Maybe.none<A>
+    cons: Maybe.some<A>(xs.head)
+  }
+
+// Returns the list without the first element
+User.mmilena.Problems.p15<A: Type>(xs: List<A>): List(A)
+  case xs{
+    nil : List.nil!
+    cons: xs.tail
+  }
+
+// Returns the length of a list
+User.mmilena.Problems.p16<A: Type>(xs: List<A>): Nat
+  case xs{
+    nil : Nat.zero
+    cons: Nat.succ(User.mmilena.Problems.p16<A>(xs.tail))
+  }
+
+// Concatenates two lists
+User.mmilena.Problems.p17<A: Type>(xs: List<A>, ys: List<A>): List<A>
+  let xs_aux = List.reverse<A>(xs)
+  User.mmilena.Problems.p17.a<A>(xs_aux, ys)
+
+User.mmilena.Problems.p17.a<A: Type>(xs: List<A>, ys: List<A>): List<A>
+  case xs{
+    nil : ys
+    cons: User.mmilena.Problems.p17.a!(xs.tail, List.cons!(xs.head, ys))
+  }
+
+// Applies a function to all elements of a list
+User.mmilena.Problems.p18<A: Type, B: Type>(fn: A -> B, xs: List<A>): List<B>
+  case xs{
+    nil : List.nil!
+    cons: 
+      let new_ele = fn(xs.head)
+      List.cons<B>(new_ele, User.mmilena.Problems.p18!!(fn, xs.tail))
+  }
+
+// Returns the same list, with the order reversed
+User.mmilena.Problems.p19<A: Type>(xs: List<A>): List<A>
+  User.mmilena.Problems.p19.a<A>(xs, List.nil<A>)
+
+User.mmilena.Problems.p19.a<A: Type>(xs: List<A>, aux: List<A>): List<A>
+  case xs{
+    nil : aux
+    cons: User.mmilena.Problems.p19.a!(xs.tail, List.cons!(xs.head, aux))
+  }
+
+// Returns pairs of the elements of the 2 input lists on the same index
+// Ex: Problems.p20!!([1,2], ["a","b"]) == [{1,"a"},{2,"b"}]
+User.mmilena.Problems.p20<A: Type, B: Type>(xs: List<A>, ys: List<B>): List<Pair<A,B>>
+  case xs{
+    nil : List.nil!
+    cons:
+      case ys{
+        nil : List.nil!
+        cons: List.cons!({xs.head,ys.head}, User.mmilena.Problems.p20!!(xs.tail, ys.tail))
+      }
+  }
+
+// Returns the smallest element of a List
+User.mmilena.Problems.p21(xs: List<Nat>): Nat
+  case xs{
+    nil : Nat.zero
+    cons: User.mmilena.Problems.p21.a(xs.tail, xs.head)
+  }
+  
+User.mmilena.Problems.p21.a(xs: List<Nat>, aux: Nat): Nat
+  case xs{
+    nil : aux
+    cons: 
+      let small = if Nat.ltn(xs.head, aux) then xs.head else aux
+      User.mmilena.Problems.p21.a(xs.tail, small)
+  }
+
+// Returns the same list without the smallest element
+User.mmilena.Problems.p22(xs: List<Nat>): List<Nat>
+  let smallest = User.mmilena.Problems.p21(xs)
+  List.filter!((ele) Bool.not(Nat.eql(ele, smallest)), xs)
+
+User.mmilena.Problems.p23(xs: List<Nat>): List<Nat>
+  let ordained = xs
+  for x in xs with ordained:
+    User.mmilena.Problems.p23.a(ordained)
+  ordained 
+
+// Returns the same list, in ascending order
+User.mmilena.Problems.p23.a(xs: List<Nat>): List<Nat>
+  case xs{
+    nil : List.nil!
+    cons:
+      case xs.tail as next{
+        nil : List.cons!(xs.head, List.nil!)
+        cons: 
+          let swap = Nat.gtn(xs.head, next.head)
+          if swap then
+            List.cons!(next.head, User.mmilena.Problems.p23(List.cons!(xs.head, next.tail)))
+          else
+            List.cons!(xs.head, User.mmilena.Problems.p23(List.cons!(next.head, next.tail)))
+      }
+  }
+
+// -----------------------------------------------------------------------------
+
+// ::::::::::::::
+// :: Theorems ::
+// ::::::::::::::
+
+// Note: these problems use functions from the base libs, NOT the ones above
+
+//Problems.t0: true == true
+//  ?a
+
+//Problems.t1(a: Bool): Bool.and(false, a) == false
+//  ?a
+
+//Problems.t2(a: Bool): Bool.and(a, false) == false
+//  ?a
+
+//Problems.t3(a: Bool): Bool.or(true, a) == true
+//  ?a
+
+//Problems.t4(a: Bool): Bool.or(a, true) == true
+//  ?a
+
+//Problems.t5(a: Bool): Bool.eql(a, a) == true
+//  ?a
+
+//Problems.t6(a: Bool): Bool.not(Bool.not(a)) == a
+//  ?a
+
+//Problems.t7(a: Bool, b: Bool): Bool.not(Bool.and(a,b)) == Bool.or(Bool.not(a), Bool.not(b))
+//  ?a
+
+//Problems.t8(a: Bool, b: Bool): Bool.not(Bool.or(a,b)) == Bool.and(Bool.not(a), Bool.not(b))
+//  ?a
+
+//Problems.t9(a: Pair<Nat,Nat>): Pair.new<Nat,Nat>(Pair.fst<Nat,Nat>(a), Pair.snd<Nat,Nat>(a)) == a
+//  ?a
+
+//Problems.t10(a: Pair<Nat,Nat>): Pair.swap<Nat,Nat>(Pair.swap<Nat,Nat>(a)) == a
+//  ?a
+
+//Problems.t11(n: Nat): Nat.same(n) == n
+//  ?a
+
+//Problems.t12(n: Nat): Nat.half(Nat.double(n)) == n
+//  ?a
+
+//Problems.t13(n: Nat): Nat.add(0,n) == n
+//  ?a
+
+//Problems.t14(n: Nat): Nat.add(n,0) == n
+//  ?a
+
+//Problems.t15(n: Nat, m: Nat): Nat.add(Nat.succ(n),m) == Nat.succ(Nat.add(n,m))
+//  ?a
+  
+//Problems.t16(n: Nat, m: Nat): Nat.add(n,Nat.succ(m)) == Nat.succ(Nat.add(n,m))
+//  ?a
+
+//Problems.t17(n: Nat, m: Nat): Nat.add(n, m) == Nat.add(m, n)
+//  ?a
+
+//Problems.t18(n: Nat): Nat.add(n,n) == Nat.double(n)
+//  ?a
+
+//Problems.t19(n: Nat): Nat.ltn(n, Nat.succ(n)) == true
+//  ?a
+
+//Problems.t20(n: Nat): Nat.gtn(Nat.succ(n), n) == true
+//  ?a
+
+//Problems.t21(n: Nat): Nat.sub(n,n) == 0
+//  ?a
+
+//Problems.t22(n: Nat, e: n == 1): Nat.succ(n) == 2
+//  ?a
+
+//Problems.t23(n: Nat, m: Nat, e: Nat.eql(n,m) == true): n == m
+//  ?a
+
+//Problems.t24(xs: List<Nat>): Nat.gtn(List.length<Nat>(List.cons<Nat>(1,xs)),0) == true
+//  ?a
+
+//Problems.t25(xs: List<Nat>): List.map<Nat,Nat>((x) x, xs) == xs
+//  ?a
+
+//Problems.t26(xs: List<Nat>, ys: List<Nat>): Nat.add(List.length<Nat>(xs), List.length<Nat>(ys)) == List.length<Nat>(List.concat<Nat>(xs,ys))
+//  ?a
+
+//Problems.t27(xs: List<Nat>): List.reverse<Nat>(List.reverse<Nat>(xs)) == xs
+//  ?a
+
+//Problems.t28: true != false
+//  ?a
+
+//Problems.t29: 3 != 2
+//  ?a
+
+//Problems.t30(a: Bool): Bool.or(true, a) != false
+//  ?a
+
+//Problems.t31(a: Bool): Bool.or(a, true) != false
+//  ?a
+
+//Problems.t32(a: Bool): Bool.and(false, a) != true
+//  ?a
+
+//Problems.t33(a: Bool): Bool.and(a, false) != true
+//  ?a
+
+//Problems.t34(a: Nat, b: Nat, e: a == b): b == a
+//  ?a
+
+//Problems.t35(a: Nat, b: Nat, c: Nat, e0: a == b, e1: b == c): a == c
+//  ?a
+
+//Problems.t36(a: Nat, P: Nat -> Type, p: P(a)): P(Nat.same(a))
+//  ?a
