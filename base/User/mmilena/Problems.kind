@@ -221,70 +221,133 @@ User.mmilena.Problems.p23.a(xs: List<Nat>): List<Nat>
 
 // Note: these problems use functions from the base libs, NOT the ones above
 
-//Problems.t0: true == true
+User.mmilena.Problems.t0: true == true
+  refl
+
+User.mmilena.Problems.t1(a: Bool): Bool.and(false, a) == false
+  refl
+
+User.mmilena.Problems.t2(a: Bool): Bool.and(a, false) == false
+  case a{
+    true : refl
+    false: refl
+  }!
+
+User.mmilena.Problems.t3(a: Bool): Bool.or(true, a) == true
+  refl
+
+User.mmilena.Problems.t4(a: Bool): Bool.or(a, true) == true
+  case a{
+    true : refl
+    false: refl
+  }!
+
+User.mmilena.Problems.t5(a: Bool): Bool.eql(a, a) == true
+  case a{
+    true : refl
+    false: refl
+  }!
+
+User.mmilena.Problems.t6(a: Bool): Bool.not(Bool.not(a)) == a
+  case a{
+    true : refl
+    false: refl
+  }!
+
+User.mmilena.Problems.t7(a: Bool, b: Bool): Bool.not(Bool.and(a,b)) == Bool.or(Bool.not(a), Bool.not(b))
+  case a {
+    true : refl
+    false: refl
+  }!
+
+User.mmilena.Problems.t8(a: Bool, b: Bool): Bool.not(Bool.or(a,b)) == Bool.and(Bool.not(a), Bool.not(b))
+  case a{
+    true : refl
+    false:
+      case b{
+        true : refl
+        false: refl
+      }!
+  }!
+
+// User.mmilena.Problems.t9(a: Pair<Nat,Nat>): Pair.new<Nat,Nat>(Pair.fst<Nat,Nat>(a), Pair.snd<Nat,Nat>(a)) == a
+//   case a{
+//     new: ?a-
+//   }!
+
+//User.mmilena.Problems.t10(a: Pair<Nat,Nat>): Pair.swap<Nat,Nat>(Pair.swap<Nat,Nat>(a)) == a
 //  ?a
 
-//Problems.t1(a: Bool): Bool.and(false, a) == false
-//  ?a
+User.mmilena.Problems.t11(n: Nat): Nat.same(n) == n
+  case n{
+    zero: refl
+    succ: 
+      let ind = User.mmilena.Problems.t11(n.pred)
+      let apl = apply(Nat.succ, ind)
+      apl
+  }!
 
-//Problems.t2(a: Bool): Bool.and(a, false) == false
-//  ?a
+// User.mmilena.Problems.t12(n: Nat): Nat.half(Nat.double(n)) == n
+//   case n{
+//     zero: refl
+//     succ: 
+//       let ind = User.mmilena.Problems.t12(n.pred)
+//       ?b-
+//   }!
 
-//Problems.t3(a: Bool): Bool.or(true, a) == true
-//  ?a
+User.mmilena.Problems.t13(n: Nat): Nat.add(0,n) == n
+  refl
 
-//Problems.t4(a: Bool): Bool.or(a, true) == true
-//  ?a
+User.mmilena.Problems.t14(n: Nat): Nat.add(n,0) == n
+  case n{
+    zero: refl
+    succ: 
+      let ind = User.mmilena.Problems.t14(n.pred)
+      let x = apply(Nat.succ, ind)
+      x
+  }!
 
-//Problems.t5(a: Bool): Bool.eql(a, a) == true
-//  ?a
-
-//Problems.t6(a: Bool): Bool.not(Bool.not(a)) == a
-//  ?a
-
-//Problems.t7(a: Bool, b: Bool): Bool.not(Bool.and(a,b)) == Bool.or(Bool.not(a), Bool.not(b))
-//  ?a
-
-//Problems.t8(a: Bool, b: Bool): Bool.not(Bool.or(a,b)) == Bool.and(Bool.not(a), Bool.not(b))
-//  ?a
-
-//Problems.t9(a: Pair<Nat,Nat>): Pair.new<Nat,Nat>(Pair.fst<Nat,Nat>(a), Pair.snd<Nat,Nat>(a)) == a
-//  ?a
-
-//Problems.t10(a: Pair<Nat,Nat>): Pair.swap<Nat,Nat>(Pair.swap<Nat,Nat>(a)) == a
-//  ?a
-
-//Problems.t11(n: Nat): Nat.same(n) == n
-//  ?a
-
-//Problems.t12(n: Nat): Nat.half(Nat.double(n)) == n
-//  ?a
-
-//Problems.t13(n: Nat): Nat.add(0,n) == n
-//  ?a
-
-//Problems.t14(n: Nat): Nat.add(n,0) == n
-//  ?a
-
-//Problems.t15(n: Nat, m: Nat): Nat.add(Nat.succ(n),m) == Nat.succ(Nat.add(n,m))
-//  ?a
+User.mmilena.Problems.t15(n: Nat, m: Nat): Nat.add(Nat.succ(n),m) == Nat.succ(Nat.add(n,m))
+  refl
+  // case n {
+  //   zero: refl
+  //     // case m{
+  //     //   zero: refl
+  //     //   succ: refl
+  //     // }!
+  //   succ: refl
+  // }!
   
-//Problems.t16(n: Nat, m: Nat): Nat.add(n,Nat.succ(m)) == Nat.succ(Nat.add(n,m))
+User.mmilena.Problems.t16(n: Nat, m: Nat): Nat.add(n,Nat.succ(m)) == Nat.succ(Nat.add(n,m))
+  case n {
+    zero: refl
+      // case m{
+      //   zero: refl
+      //   succ: ?y-18-19-
+      // }!
+    succ: //?b-18-
+      let ind = User.mmilena.Problems.t16(n.pred)
+      ?b
+  }!
+
+// Nat.succ(Nat.add(n.pred,Nat.succ(m))
+// Nat.succ(Nat.add(Nat.succ(n.pred),m))
+// n + (1 + m) == (1 + n) + m
+
+
+//User.mmilena.Problems.t17(n: Nat, m: Nat): Nat.add(n, m) == Nat.add(m, n)
 //  ?a
 
-//Problems.t17(n: Nat, m: Nat): Nat.add(n, m) == Nat.add(m, n)
+//User.mmilena.Problems.t18(n: Nat): Nat.add(n,n) == Nat.double(n)
 //  ?a
 
-//Problems.t18(n: Nat): Nat.add(n,n) == Nat.double(n)
+//User.mmilena.Problems.t19(n: Nat): Nat.ltn(n, Nat.succ(n)) == true
 //  ?a
 
-//Problems.t19(n: Nat): Nat.ltn(n, Nat.succ(n)) == true
+//User.mmilena.Problems.t20(n: Nat): Nat.gtn(Nat.succ(n), n) == true
 //  ?a
 
-//Problems.t20(n: Nat): Nat.gtn(Nat.succ(n), n) == true
-//  ?a
-
-//Problems.t21(n: Nat): Nat.sub(n,n) == 0
+//User.mmilena.Problems.t21(n: Nat): Nat.sub(n,n) == 0
 //  ?a
 
 //Problems.t22(n: Nat, e: n == 1): Nat.succ(n) == 2
