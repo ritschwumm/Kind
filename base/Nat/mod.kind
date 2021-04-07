@@ -1,2 +1,6 @@
-Nat.mod(n: Nat, m: Nat): Nat
-  Nat.mod.go(n, m, 0)
+// Returns the remainder of a division between 2 natural numbers
+// - Nat.mod(13, 5) == 3
+// - Nat.mod(8, 2)  == 0
+
+Nat.mod(a: Nat, b: Nat): Nat
+  Nat.mod.go(a, b, 0)

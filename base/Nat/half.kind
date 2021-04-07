@@ -1,8 +1,13 @@
+// Divides a natural number (n) by 2
+// The remainder is discarded
+// - Nat.half(8) = 4 
+// - Nat.half(5) = 2 
+
 Nat.half(n: Nat): Nat
   case n {
-    zero: Nat.zero,
+    zero: Nat.zero
     succ: case n.pred {
-      zero: Nat.zero,
+      zero: Nat.zero
       succ: Nat.succ(Nat.half(n.pred.pred))
     }
   }

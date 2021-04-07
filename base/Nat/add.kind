@@ -1,5 +1,10 @@
-Nat.add(n: Nat, m: Nat): Nat
-  case n {
-    zero: m,
-    succ: Nat.succ(Nat.add(n.pred, m)),
+// Adds two natural numbers (a, b) and returns a natural number
+// Can be written as 2 + 3 (Syntax sugar)
+// - Nat.add(2, 3) == 5
+// - Nat.add(0, 5) == 0
+
+Nat.add(a: Nat, b: Nat): Nat
+  case a {
+    zero: b
+    succ: Nat.succ(Nat.add(a.pred, b))
   }

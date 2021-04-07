@@ -1,5 +1,9 @@
-Nat.apply<A: Type>(n: Nat, f: (x:A) A, x: A): A
-  case n {
-    zero: x,
-    succ: Nat.apply<A>(n.pred, f, f(x)),
+// Applies function (f) "a" times to "b"
+// - Nat.apply!(2, Nat.double, 5) == 20
+// - Nat.apply!(3, Bool.not, true) == false
+
+Nat.apply<A: Type>(a: Nat, f: A -> A, b: A): A
+  case a {
+    zero: b
+    succ: Nat.apply<A>(a.pred, f, f(b))
   }

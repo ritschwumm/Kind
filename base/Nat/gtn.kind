@@ -1,8 +1,13 @@
-Nat.gtn(n: Nat, m: Nat): Bool
-  case n {
-    zero: Bool.false,
-    succ: case m {
-      zero: Bool.true,
-      succ: Nat.gtn(n.pred, m.pred),
+// Confirms if "a" is greater than "b"
+// - Nat.gtn(5, 3) = true
+// - Nat.gtn(3, 3) = false
+// - Nat.gtn(2, 3) = false
+
+Nat.gtn(a: Nat, b: Nat): Bool
+  case a {
+    zero: Bool.false
+    succ: case b {
+      zero: Bool.true
+      succ: Nat.gtn(a.pred, b.pred)
     }
   }

@@ -1,8 +1,13 @@
-Nat.gte(n: Nat, m: Nat): Bool
-  case m {
-    zero: Bool.true,
-    succ: case n {
-      zero: Bool.false,
-      succ: Nat.gte(n.pred, m.pred),
+// Confirms if "a" is greater than or equal to "b"
+// - Nat.gte(5, 3) = true 
+// - Nat.gte(3, 3) = true
+// - Nat.gte(2, 3) = false
+
+Nat.gte(a: Nat, b: Nat): Bool
+  case b {
+    zero: Bool.true
+    succ: case a {
+      zero: Bool.false
+      succ: Nat.gte(a.pred, b.pred)
     }
   }

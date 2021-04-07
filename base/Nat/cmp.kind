@@ -1,11 +1,16 @@
+// Compares two natural numbers (a, b) and tells if "a" is greater than, lesser than, or equal to "b"
+// - Nat.cmp(3, 5) == ltn ->
+// - Nat.cmp(1, 0) == gtn ->
+// - Nat.cmp(4, 4) == eql ->
+
 Nat.cmp(a: Nat, b: Nat): Cmp
   case a {
     zero: case b {
-      zero: Cmp.eql,
-      succ: Cmp.ltn,
-    },
+      zero: Cmp.eql
+      succ: Cmp.ltn
+    }
     succ: case b {
-      zero: Cmp.gtn,
-      succ: Nat.cmp(a.pred, b.pred),
-    },
+      zero: Cmp.gtn
+      succ: Nat.cmp(a.pred, b.pred)
+    }
   }

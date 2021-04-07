@@ -1,5 +1,9 @@
+// Doubles a natural number (n)
+// - Nat.double(3) = 6
+// - Nat.double(0) = 0
+
 Nat.double(n: Nat): Nat
   case n {
-    zero: Nat.zero,
-    succ: Nat.succ(Nat.succ(Nat.double(n.pred))),
+    zero: Nat.zero
+    succ: Nat.succ(Nat.succ(Nat.double(n.pred)))
   }
