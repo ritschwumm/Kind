@@ -1,0 +1,10 @@
+List.split(A : Type, xs : List<A>, n : Nat) : Pair<List<A>, List<A>>
+  case n {
+    zero : {[], xs}
+    succ : case xs {
+      nil : {[], xs}
+      cons :
+       let {xs, ys} = List.split(A, xs.tail, n.pred)
+       {List.cons(A, xs.head, xs), ys}
+    }
+  }

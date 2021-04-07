@@ -1,0 +1,17 @@
+List.insert_sort<A : Type>(f : A -> A -> Bool, xs : List<A>, v : A) : List<A>
+  let {ls, ys} = List.split(A, xs, Nat.half(List.length(A, xs)))
+  log("uma")
+  case ls {
+    nil :  case ys {
+      nil : List.cons!(v, List.nil!)
+      cons : if f(v, ys.head) then [ys.head, v] else [v, ys.head] 
+    }
+    cons : case ys {
+      nil : List.insert_sort(A, f, ls, v)
+      cons : 
+        if f(v, ys.head) then
+          (ls ++ List.insert_sort(A, f, ys, v))
+        else
+          (List.insert_sort(A, f, ls, v) ++ ys)
+    }
+  }

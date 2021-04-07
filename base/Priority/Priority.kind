@@ -1,0 +1,16 @@
+type Priority<A : Type> {
+    new(order : Nat -> Nat -> Bool, map : Map<List<Pair<Nat, A>>>)
+}
+
+Priority.push(A : Type, P : Priority<A>, key : String, p : Nat, v : A) : Priority<A>
+  open P
+  let f = ((proj, proj1)
+           open proj
+           open proj1
+           P.order(proj.fst, proj1.fst)) :: Pair<Nat, A> -> Pair<Nat, A> -> Bool
+  case (P.map{key}) as v {
+      some : 
+        Priority.new!(P.order, P.map{key} <- List.insert_sort(Pair<Nat, A>, f, v.value, {p, v}))
+      none : 
+        Priority.new!(P.order, P.map{key} <- [{p, v}])
+  }
