@@ -1,7 +1,7 @@
 // Returns the greatest common divisor of 2 natural numbers (a, b)
-// - Nat.gcd(20, 15) = 5 -> 5 
-// - Nat.gcd(13, 17) = 1 -> 1 
-// - Nat.gcd(7, 7)   = 7 -> 7 
+// - Nat.gcd(20, 15) == 5
+// - Nat.gcd(13, 17) == 1
+// - Nat.gcd(7, 7)   == 7
 
 Nat.gcd(a: Nat, b: Nat): Nat
   case a {

@@ -1,4 +1,5 @@
 // Returns the remainder of a division between 2 natural numbers
+// Can be written as 17 % 5 (Syntax sugar)
 // - Nat.mod(13, 5) == 3
 // - Nat.mod(8, 2)  == 0
 

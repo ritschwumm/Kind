@@ -1,2 +1,6 @@
+// Returns the least common multiple of 2 natural numbers (a, b)
+// - Nat.lcm(3, 5) == 15 
+// - Nat.lcm(2, 4) == 4
+
 Nat.lcm(a: Nat, b: Nat): Nat
   (a * b) / Nat.gcd(a , b)

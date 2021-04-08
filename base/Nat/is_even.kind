@@ -1,5 +1,9 @@
-Nat.is_even(n: Nat): Bool
-  case n {
-    zero: true,
-    succ: Bool.not(Nat.is_even(n.pred)),
+// Confirms if "a" is an even number
+// - Nat.is_even(2) == true
+// - Nat.is_even(5) == false
+
+Nat.is_even(a: Nat): Bool
+  case a {
+    zero: true
+    succ: Bool.not(Nat.is_even(a.pred))
   }

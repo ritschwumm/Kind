@@ -1,4 +1,4 @@
-// Adds two natural numbers (a, b) and returns a natural number
+// Adds two natural numbers (a, b)
 // Can be written as 2 + 3 (Syntax sugar)
 // - Nat.add(2, 3) == 5
 // - Nat.add(0, 5) == 0

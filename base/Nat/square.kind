@@ -1,2 +1,6 @@
+//Returns the square of "a"
+// - Nat.square(4) == 16
+// - Nat.square(1) == 1
+
 Nat.square(a: Nat): Nat
   Nat.mul(a, a)

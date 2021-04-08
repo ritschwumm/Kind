@@ -1,8 +1,13 @@
-Nat.sub(n: Nat, m: Nat): Nat
-  case m {
-    zero: n,
-    succ: case n {
-      zero: 0,
-      succ: Nat.sub(n.pred, m.pred),
+// Subtracts "b" from "a"
+// Can be written as 2 - 3 (Syntax sugar)
+// - Nat.sub(3, 2) == 1
+// - Nat.sub(2, 6) == 0
+
+Nat.sub(a: Nat, b: Nat): Nat
+  case b {
+    zero: a
+    succ: case a {
+      zero: 0
+      succ: Nat.sub(a.pred, b.pred)
     }
   }

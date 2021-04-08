@@ -1,8 +1,14 @@
-Nat.ltn(n: Nat, m: Nat): Bool
-  case m {
-    zero: Bool.false,
-    succ: case n {
-      zero: Bool.true,
-      succ: Nat.ltn(n.pred, m.pred),
+// Confirms if "a" is lesser than "b"
+// Can be written as 3 <? 2 (Syntax sugar)
+// - Nat.gtn(3, 5) == true
+// - Nat.gtn(3, 3) == false
+// - Nat.gtn(2, 3) == true
+
+Nat.ltn(a: Nat, b: Nat): Bool
+  case b {
+    zero: Bool.false
+    succ: case a {
+      zero: Bool.true
+      succ: Nat.ltn(a.pred, b.pred)
     }
   }

@@ -1,15 +1,12 @@
 // Confirms if two natural numbers (a, b) are equal
-// - Nat.eql(5, 6) = false
-// - Nat.eql(3, 3) = true
+// Can be written as 3 =? 2 (Syntax sugar)
+// - Nat.eql(5, 6) == false
+// - Nat.eql(3, 3) == true
 
 Nat.eql(a: Nat, b: Nat): Bool
-  case a {
-    zero: case b {
-      zero: Bool.true
-      succ: Bool.false
-    }
-    succ: case b {
-      zero: Bool.false
-      succ: Nat.eql(a.pred, b.pred)
-    }
+  case a b {
+    zero zero: Bool.true
+    zero succ: Bool.false
+    succ zero: Bool.false
+    succ succ: Nat.eql(a.pred, b.pred)
   }

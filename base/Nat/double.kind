@@ -1,9 +1,9 @@
-// Doubles a natural number (n)
-// - Nat.double(3) = 6
-// - Nat.double(0) = 0
+// Doubles a natural number (a)
+// - Nat.double(3) == 6
+// - Nat.double(0) == 0
 
-Nat.double(n: Nat): Nat
-  case n {
+Nat.double(a: Nat): Nat
+  case a {
     zero: Nat.zero
-    succ: Nat.succ(Nat.succ(Nat.double(n.pred)))
+    succ: Nat.succ(Nat.succ(Nat.double(a.pred)))
   }

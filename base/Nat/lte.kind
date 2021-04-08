@@ -1,8 +1,14 @@
-Nat.lte(n: Nat, m: Nat): Bool
-  case n {
-    zero: Bool.true,
-    succ: case m {
-      zero: Bool.false,
-      succ: Nat.lte(n.pred, m.pred),
+// Confirms if "a" is lesser than or equal to "b"
+// Can be written as 3 <=? 2 (Syntax sugar)
+// - Nat.gte(3, 5) == true 
+// - Nat.gte(3, 3) == true
+// - Nat.gte(5, 3) == false
+
+Nat.lte(a: Nat, b: Nat): Bool
+  case a {
+    zero: Bool.true
+    succ: case b {
+      zero: Bool.false
+      succ: Nat.lte(a.pred, b.pred)
     }
   }

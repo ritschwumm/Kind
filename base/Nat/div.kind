@@ -1,2 +1,7 @@
-Nat.div(n: Nat, m: Nat): Nat
-  Pair.fst!!(Nat.div_mod(n, m))
+// Divides "a" by "b"
+// Can be written as 8 / 2 (Syntax sugar)
+// - Nat.div(4, 2)  == 2
+// - Nat.div(10, 3) == 3
+
+Nat.div(a: Nat, b: Nat): Nat
+  Pair.fst!!(Nat.div_mod(a, b))

@@ -1,5 +1,9 @@
-Nat.is_zero(n: Nat): Bool
-  case n {
-    zero: Bool.true,
-    succ: Bool.false,
+// Confirms if "a" is 0
+// - Nat.is_even(0) == true
+// - Nat.is_even(3) == false
+
+Nat.is_zero(a: Nat): Bool
+  case a {
+    zero: Bool.true
+    succ: Bool.false
   }

@@ -1,7 +1,8 @@
 // Confirms if "a" is greater than or equal to "b"
-// - Nat.gte(5, 3) = true 
-// - Nat.gte(3, 3) = true
-// - Nat.gte(2, 3) = false
+// Can be written as 3 >=? 2 (Syntax sugar)
+// - Nat.gte(5, 3) == true 
+// - Nat.gte(3, 3) == true
+// - Nat.gte(2, 3) == false
 
 Nat.gte(a: Nat, b: Nat): Bool
   case b {

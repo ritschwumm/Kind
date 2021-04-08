@@ -1,5 +1,10 @@
-Nat.mul(n: Nat, m: Nat): Nat
-  case m {
-    zero: Nat.zero,
-    succ: Nat.add(n, Nat.mul(n, m.pred)),
+// Multiplies two natural numbers (a, b) 
+// Can be written as 2 * 3 (Syntax sugar)
+// - Nat.add(2, 3) == 5
+// - Nat.add(0, 5) == 0
+
+Nat.mul(a: Nat, b: Nat): Nat
+  case b {
+    zero: Nat.zero
+    succ: Nat.add(a, Nat.mul(a, b.pred))
   }

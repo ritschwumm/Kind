@@ -1,2 +1,6 @@
-Nat.odd(n: Nat): Bool
-  Nat.eql(Nat.mod(n, 2), 1)
+// Confirms if "a" is an odd number
+// - Nat.odd(3) == true
+// - Nat.odd(0) == false
+
+Nat.odd(a: Nat): Bool
+  Nat.eql(Nat.mod(a, 2), 1)
